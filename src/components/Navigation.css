@@ -1,0 +1,142 @@
+.navigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 70%, transparent 100%);
+  z-index: 10;
+  touch-action: pan-y;
+}
+
+.nav-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.nav-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.nav-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.nav-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.nav-button svg {
+  flex-shrink: 0;
+}
+
+.object-select {
+  flex: 1;
+  max-width: 300px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.object-select:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.object-select:focus {
+  outline: none;
+  border-color: rgba(136, 204, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(136, 204, 255, 0.2);
+}
+
+.object-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.object-select option {
+  background: #1a1a1a;
+  color: white;
+  padding: 8px;
+}
+
+.keyboard-hint {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .navigation {
+    padding: 16px;
+  }
+
+  .nav-controls {
+    gap: 12px;
+  }
+
+  .nav-button span {
+    display: none;
+  }
+
+  .nav-button {
+    padding: 12px;
+  }
+
+  .object-select {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .keyboard-hint {
+    font-size: 11px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .nav-controls {
+    gap: 8px;
+  }
+
+  .nav-button {
+    padding: 10px;
+  }
+
+  .object-select {
+    max-width: 200px;
+    font-size: 13px;
+  }
+}
