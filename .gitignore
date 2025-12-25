@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 CLAUDE.md
+IMPROVEMENTS.md
 
 # Editor directories and files
 .vscode/*

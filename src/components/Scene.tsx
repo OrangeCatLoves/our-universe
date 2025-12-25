@@ -1,37 +1,67 @@
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useCosmicStore } from '../store/useCosmicStore';
 import { celestialObjects } from '../data/objects';
 import { CelestialObject } from './CelestialObject';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import * as THREE from 'three';
+
+// Component to load and set the cubemap skybox
+function Skybox() {
+  const { scene } = useThree();
+  const [cubeTexture, setCubeTexture] = useState<THREE.CubeTexture | null>(null);
+
+  useEffect(() => {
+    const loader = new THREE.CubeTextureLoader();
+    loader.setPath('/textures/spacebg/');
+
+    loader.load(
+      ['px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png'],
+      (texture) => {
+        console.log('Cubemap loaded successfully');
+        setCubeTexture(texture);
+      },
+      undefined,
+      (error) => {
+        console.error('Failed to load cubemap:', error);
+      }
+    );
+
+    return () => {
+      if (cubeTexture) {
+        cubeTexture.dispose();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (cubeTexture) {
+      scene.background = cubeTexture;
+    }
+
+    return () => {
+      scene.background = null;
+    };
+  }, [cubeTexture, scene]);
+
+  return null;
+}
 
 export function Scene() {
   const { visibleObjects, currentIndex } = useCosmicStore();
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      {/* Background image layer */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundImage: 'url(/images/spacebackground.jpg), url(/images/spacebackground.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          zIndex: 0,
-        }}
-      />
-
+    <div style={{ width: '100%', height: '100%' }}>
       <Canvas
         camera={{ position: [0, 2, 8], fov: 50 }}
-        style={{ background: 'transparent', position: 'relative', zIndex: 1 }}
       >
-        {/* Lighting */}
-        <ambientLight intensity={0.3} />
+        {/* Cubemap Skybox */}
+        <Suspense fallback={null}>
+          <Skybox />
+        </Suspense>
+
+        {/* Lighting - increased ambient for better visibility */}
+        <ambientLight intensity={0.6} />
         <pointLight position={[10, 10, 10]} intensity={1} />
         <pointLight position={[-10, -10, -10]} intensity={0.5} />
 
@@ -62,6 +92,7 @@ export function Scene() {
           maxDistance={20}
           target={[0, 0, 0]}
         />
+
       </Canvas>
     </div>
   );
