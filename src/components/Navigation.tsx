@@ -1,12 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useCosmicStore } from '../store/useCosmicStore';
 import { celestialObjects } from '../data/objects';
+import { RadialMenu } from './RadialMenu';
 import './Navigation.css';
 
 export function Navigation() {
   const { currentIndex, next, previous, jumpTo, isTransitioning } = useCosmicStore();
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile/desktop
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -64,6 +77,9 @@ export function Navigation() {
   const canGoPrevious = currentIndex > 0;
   const canGoNext = currentIndex < celestialObjects.length - 1;
 
+  const totalObjects = celestialObjects.length;
+  const progressPercent = (currentIndex / (totalObjects - 1)) * 100;
+
   return (
     <div
       className="navigation"
@@ -71,6 +87,19 @@ export function Navigation() {
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
+      {/* Progress Bar */}
+      <div className="progress-container">
+        <div className="progress-bar">
+          <div
+            className="progress-fill"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+        <div className="progress-text">
+          {currentIndex + 1} of {totalObjects}
+        </div>
+      </div>
+
       <div className="nav-controls">
         <button
           className="nav-button"
@@ -84,19 +113,28 @@ export function Navigation() {
           <span>Previous</span>
         </button>
 
-        <select
-          className="object-select"
-          value={currentIndex}
-          onChange={handleDropdownChange}
-          disabled={isTransitioning}
-          aria-label="Jump to object"
-        >
-          {celestialObjects.map((obj, index) => (
-            <option key={obj.id} value={index}>
-              {obj.name}
-            </option>
-          ))}
-        </select>
+        {/* Desktop: Radial Menu / Mobile: Dropdown */}
+        {isMobile ? (
+          <select
+            className="object-select"
+            value={currentIndex}
+            onChange={handleDropdownChange}
+            disabled={isTransitioning}
+            aria-label="Jump to object"
+          >
+            {celestialObjects.map((obj, index) => (
+              <option key={obj.id} value={index}>
+                {obj.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <RadialMenu
+            currentIndex={currentIndex}
+            onSelect={jumpTo}
+            disabled={isTransitioning}
+          />
+        )}
 
         <button
           className="nav-button"
