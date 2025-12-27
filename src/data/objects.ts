@@ -313,7 +313,7 @@ export const celestialObjects: CelestialObject[] = [
     type: 'Main Sequence Star',
     category: 'sphere',
     color: '#FFFFFF',
-    texture: 'sirius.jpg',
+    texture: 'sirius-a.jpg',
     discoveryDate: 'Prehistoric',
     discoveredBy: 'N/A',
     description: 'The brightest star in Earth\'s night sky.',
