@@ -33,6 +33,42 @@ const transparentDarkFragmentShader = `
   }
 `;
 
+// Special shader for black holes - preserves dark center (event horizon) while making edges transparent
+const blackHoleFragmentShader = `
+  uniform sampler2D map;
+  uniform float threshold;
+  uniform float smoothness;
+  uniform float centerPreserveRadius;
+  varying vec2 vUv;
+
+  void main() {
+    vec4 texColor = texture2D(map, vUv);
+
+    // Calculate luminance (perceived brightness)
+    float luminance = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
+
+    // Calculate distance from center (0 at center, 1 at corners)
+    vec2 centered = vUv - 0.5;
+    float distFromCenter = length(centered) * 2.0; // Normalize to 0-1 range
+
+    // Determine if we're in the center region that should stay solid
+    // The center preserve radius defines how much of the center stays opaque even if dark
+    float centerWeight = 1.0 - smoothstep(centerPreserveRadius * 0.5, centerPreserveRadius, distFromCenter);
+
+    // For edges: dark pixels become transparent
+    // For center: dark pixels stay opaque (it's the event horizon)
+    float edgeAlpha = smoothstep(threshold, threshold + smoothness, luminance);
+
+    // Blend: center region ignores luminance-based transparency
+    float alpha = mix(edgeAlpha, 1.0, centerWeight);
+
+    // But if the pixel is bright, it should always be visible
+    alpha = max(alpha, edgeAlpha);
+
+    gl_FragColor = vec4(texColor.rgb, alpha * texColor.a);
+  }
+`;
+
 interface Props {
   object: CelestialObjectType;
   scale: number;
@@ -50,6 +86,11 @@ function isStar(type: string): boolean {
 // Helper to check if object is Saturn (has rings)
 function isSaturn(id: string): boolean {
   return id === 'saturn';
+}
+
+// Helper to check if object is a black hole (needs special transparency handling)
+function isBlackHole(type: string): boolean {
+  return type.toLowerCase().includes('black hole');
 }
 
 // Saturn's rings component
@@ -243,17 +284,21 @@ export function CelestialObject({ object, scale, positionX, positionY, entryFrom
   );
 }
 
-// Static image component for nebulae, galaxies, etc.
+// Static image component for nebulae, galaxies, black holes, etc.
 // Uses Billboard to always face camera and custom shader for dark pixel transparency
+// Black holes use a special shader that preserves the dark center (event horizon)
 function StaticImage({ object }: { object: CelestialObjectType }) {
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [aspectRatio, setAspectRatio] = useState<number>(1);
+  const objectIsBlackHole = isBlackHole(object.type);
 
   // Create shader uniforms - memoized to prevent recreation
+  // Black holes need an extra uniform for center preservation
   const uniforms = useMemo(() => ({
     map: { value: null as THREE.Texture | null },
     threshold: { value: 0.05 },    // Pixels darker than this become transparent
     smoothness: { value: 0.1 },    // Smooth transition range
+    centerPreserveRadius: { value: 0.6 }, // For black holes: preserve dark center within this radius
   }), []);
 
   // Update texture uniform when texture changes
@@ -301,7 +346,8 @@ function StaticImage({ object }: { object: CelestialObjectType }) {
   }, [object.image, object.name]);
 
   if (texture) {
-    const baseSize = 3.5; // Increased from 2 to make static images more prominent
+    // Black holes get a larger base size for more imposing presence
+    const baseSize = objectIsBlackHole ? 9.0 : 3.5;
     let width = baseSize;
     let height = baseSize;
 
@@ -317,7 +363,7 @@ function StaticImage({ object }: { object: CelestialObjectType }) {
           <planeGeometry args={[width, height]} />
           <shaderMaterial
             vertexShader={transparentDarkVertexShader}
-            fragmentShader={transparentDarkFragmentShader}
+            fragmentShader={objectIsBlackHole ? blackHoleFragmentShader : transparentDarkFragmentShader}
             uniforms={uniforms}
             transparent={true}
             side={THREE.DoubleSide}

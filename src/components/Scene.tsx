@@ -1,9 +1,9 @@
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useCosmicStore } from '../store/useCosmicStore';
 import { celestialObjects } from '../data/objects';
 import { CelestialObject } from './CelestialObject';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import * as THREE from 'three';
 
 // Component to load and set the cubemap skybox
@@ -47,8 +47,74 @@ function Skybox() {
   return null;
 }
 
+// Component to fade background to black when viewing Observable Universe
+// This creates the effect that there's nothing "outside" the observable universe
+function BackgroundFade() {
+  const { currentIndex } = useCosmicStore();
+  const materialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const [targetOpacity, setTargetOpacity] = useState(0);
+  const currentOpacity = useRef(0);
+
+  // Check if current object is Observable Universe
+  useEffect(() => {
+    const isObservableUniverse = celestialObjects[currentIndex]?.id === 'observable-universe';
+    setTargetOpacity(isObservableUniverse ? 1 : 0);
+  }, [currentIndex]);
+
+  // Smoothly animate opacity
+  useFrame((_, delta) => {
+    if (materialRef.current) {
+      const speed = 0.12; // Animation speed (lower = slower, more dramatic cinematic fade)
+      const diff = targetOpacity - currentOpacity.current;
+
+      if (Math.abs(diff) > 0.001) {
+        currentOpacity.current += diff * speed * delta * 60; // 60fps normalized
+        currentOpacity.current = Math.max(0, Math.min(1, currentOpacity.current));
+        materialRef.current.opacity = currentOpacity.current;
+      }
+    }
+  });
+
+  return (
+    <mesh>
+      {/* Large sphere that surrounds everything - renders on inside (BackSide) */}
+      <sphereGeometry args={[100, 32, 32]} />
+      <meshBasicMaterial
+        ref={materialRef}
+        color="#000000"
+        side={THREE.BackSide}
+        transparent={true}
+        opacity={0}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
+// Component to reset camera when entering Observable Universe
+function CameraController({ isObservableUniverse }: { isObservableUniverse: boolean }) {
+  const { camera } = useThree();
+  const prevIsObservableUniverse = useRef(false);
+
+  useEffect(() => {
+    // Only reset when transitioning TO Observable Universe (not when leaving)
+    if (isObservableUniverse && !prevIsObservableUniverse.current) {
+      // Reset camera to default position
+      camera.position.set(0, 2, 8);
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
+    }
+    prevIsObservableUniverse.current = isObservableUniverse;
+  }, [isObservableUniverse, camera]);
+
+  return null;
+}
+
 export function Scene() {
   const { visibleObjects, currentIndex } = useCosmicStore();
+
+  // Disable camera controls when viewing Observable Universe
+  const isObservableUniverse = celestialObjects[currentIndex]?.id === 'observable-universe';
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
@@ -59,6 +125,12 @@ export function Scene() {
         <Suspense fallback={null}>
           <Skybox />
         </Suspense>
+
+        {/* Background fade overlay - fades to black for Observable Universe */}
+        <BackgroundFade />
+
+        {/* Camera controller - resets camera when entering Observable Universe */}
+        <CameraController isObservableUniverse={isObservableUniverse} />
 
         {/* Lighting - increased ambient for better visibility */}
         <ambientLight intensity={0.6} />
@@ -83,8 +155,9 @@ export function Scene() {
           })}
         </Suspense>
 
-        {/* Camera controls */}
+        {/* Camera controls - disabled at Observable Universe */}
         <OrbitControls
+          enabled={!isObservableUniverse}
           enableZoom={true}
           enablePan={true}
           enableRotate={true}

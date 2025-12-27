@@ -17,6 +17,24 @@ export interface CelestialObject {
 export const celestialObjects: CelestialObject[] = [
   // === DWARF PLANETS & MOONS ===
   {
+    id: 'enceladus',
+    name: 'Enceladus',
+    sizeKm: 504,
+    type: 'Natural Satellite',
+    category: 'sphere',
+    color: '#F5F5F5',
+    texture: 'enceladus.jpg',
+    discoveryDate: '1789',
+    discoveredBy: 'William Herschel',
+    description: 'Saturn\'s icy moon with geysers that spray water into space.',
+    funFacts: [
+      'Enceladus has geysers that shoot water ice into space from its south pole',
+      'It has a subsurface ocean that may harbor conditions suitable for life',
+      'Despite being only 500 km wide, it\'s one of the most reflective objects in the Solar System',
+      'The water from its geysers feeds Saturn\'s E ring'
+    ]
+  },
+  {
     id: 'ceres',
     name: 'Ceres',
     sizeKm: 939,
@@ -86,6 +104,24 @@ export const celestialObjects: CelestialObject[] = [
       '12 humans have walked on the Moon between 1969 and 1972',
       'The Moon has moonquakes caused by tidal stresses from Earth',
       'The same side of the Moon always faces Earth due to tidal locking'
+    ]
+  },
+  {
+    id: 'io',
+    name: 'Io',
+    sizeKm: 3643,
+    type: 'Natural Satellite',
+    category: 'sphere',
+    color: '#FFDB58',
+    texture: 'io.jpg',
+    discoveryDate: '1610',
+    discoveredBy: 'Galileo Galilei',
+    description: 'Jupiter\'s volcanic moon - the most geologically active body in the Solar System.',
+    funFacts: [
+      'Io has over 400 active volcanoes, more than any other body in the Solar System',
+      'Its surface is constantly being reshaped by volcanic activity',
+      'Tidal heating from Jupiter causes its intense volcanic activity',
+      'Io\'s volcanoes can eject plumes up to 500 km high'
     ]
   },
   {
@@ -367,7 +403,7 @@ export const celestialObjects: CelestialObject[] = [
     type: 'Supermassive Black Hole',
     category: 'static',
     color: '#000000',
-    image: 'sagittarius-a.jpg',
+    image: 'sagittarius-a.png',
     discoveryDate: '1974',
     discoveredBy: 'Bruce Balick & Robert Brown',
     description: 'The supermassive black hole at the center of the Milky Way.',
@@ -477,7 +513,7 @@ export const celestialObjects: CelestialObject[] = [
     type: 'Supermassive Black Hole',
     category: 'static',
     color: '#000000',
-    image: 'ton-618.jpg',
+    image: 'ton618.png',
     discoveryDate: '1957',
     discoveredBy: 'Tonantzintla Observatory',
     description: 'One of the most massive black holes ever discovered.',
@@ -524,6 +560,24 @@ export const celestialObjects: CelestialObject[] = [
       'The nebula is roughly 2.5 light-years in diameter',
       'It\'s often called the "Eye of God" or "Eye of Sauron"',
       'The central white dwarf is about the size of Earth but extremely dense'
+    ]
+  },
+  {
+    id: 'crab-nebula',
+    name: 'Crab Nebula',
+    sizeKm: 104071000000000,
+    type: 'Supernova Remnant',
+    category: 'static',
+    color: '#FF6347',
+    image: 'crab-nebula.jpg',
+    discoveryDate: '1731',
+    discoveredBy: 'John Bevis',
+    description: 'The remnant of a supernova explosion witnessed by astronomers in 1054 AD.',
+    funFacts: [
+      'The supernova that created it was visible in daylight for 23 days in 1054 AD',
+      'It contains the Crab Pulsar, a neutron star spinning 30 times per second',
+      'The nebula is still expanding at about 1,500 km/s',
+      'Chinese and Arab astronomers recorded the "guest star" that created it'
     ]
   },
   {
@@ -675,21 +729,21 @@ export const celestialObjects: CelestialObject[] = [
 
   // === LARGE SCALE STRUCTURES ===
   {
-    id: 'local-group',
-    name: 'Local Group',
-    sizeKm: 97828032000000000000,
-    type: 'Galaxy Group',
+    id: 'bootes-void',
+    name: 'Boötes Void',
+    sizeKm: 3122130000000000000000,
+    type: 'Supervoid',
     category: 'static',
-    color: '#87CEEB',
-    image: 'local-group.jpg',
-    discoveryDate: '1936',
-    discoveredBy: 'Edwin Hubble',
-    description: 'The galaxy group containing the Milky Way and Andromeda.',
+    color: '#0a0a14',
+    image: 'bootes-void.png',
+    discoveryDate: '1981',
+    discoveredBy: 'Robert Kirshner et al.',
+    description: 'One of the largest known voids in the universe - a vast, nearly empty region of space.',
     funFacts: [
-      'Contains about 80 galaxies',
-      'Spans about 10 million light-years',
-      'Dominated by three large galaxies: Milky Way, Andromeda, and Triangulum',
-      'Most of its mass is dark matter'
+      'Spans approximately 330 million light-years in diameter',
+      'Contains only about 60 galaxies, where 2,000 would be expected',
+      'Sometimes called "The Great Nothing" due to its emptiness',
+      'If the Milky Way were at its center, we wouldn\'t have known other galaxies existed until the 1960s'
     ]
   },
   {
