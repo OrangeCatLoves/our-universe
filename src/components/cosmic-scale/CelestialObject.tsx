@@ -317,7 +317,7 @@ function StaticImage({ object }: { object: CelestialObjectType }) {
     if (object.image) {
       const loader = new THREE.TextureLoader();
       loader.load(
-        `/images/${object.image}`,
+        `/images/cosmic-scale/${object.image}`,
         (tex) => {
           if (isMounted) {
             tex.colorSpace = THREE.SRGBColorSpace;
