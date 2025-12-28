@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useCosmicStore } from '../store/useCosmicStore';
-import { celestialObjects } from '../data/objects';
+import { useCosmicStore } from '../../store/useCosmicStore';
+import { celestialObjects } from '../../data/cosmicScale';
 import { RadialMenu } from './RadialMenu';
 import './Navigation.css';
 
@@ -9,6 +9,9 @@ export function Navigation() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Debug logging
+  console.log('Navigation render:', { currentIndex, isTransitioning });
 
   // Detect mobile/desktop
   useEffect(() => {
@@ -78,6 +81,17 @@ export function Navigation() {
   const canGoNext = currentIndex < celestialObjects.length - 1;
 
   const totalObjects = celestialObjects.length;
+
+  // Debug click handlers
+  const handleNextClick = () => {
+    console.log('Next button clicked!', { canGoNext, isTransitioning });
+    next();
+  };
+
+  const handlePrevClick = () => {
+    console.log('Previous button clicked!', { canGoPrevious, isTransitioning });
+    previous();
+  };
   const progressPercent = (currentIndex / (totalObjects - 1)) * 100;
 
   return (
@@ -103,7 +117,7 @@ export function Navigation() {
       <div className="nav-controls">
         <button
           className="nav-button"
-          onClick={previous}
+          onClick={handlePrevClick}
           disabled={!canGoPrevious || isTransitioning}
           aria-label="Previous object"
         >
@@ -138,7 +152,7 @@ export function Navigation() {
 
         <button
           className="nav-button"
-          onClick={next}
+          onClick={handleNextClick}
           disabled={!canGoNext || isTransitioning}
           aria-label="Next object"
         >

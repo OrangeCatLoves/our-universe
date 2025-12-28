@@ -1,0 +1,61 @@
+.back-to-menu-button {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.back-to-menu-button:hover {
+  color: white;
+  border-color: rgba(77, 201, 255, 0.8);
+  box-shadow:
+    0 0 15px rgba(77, 201, 255, 0.4),
+    0 0 30px rgba(77, 201, 255, 0.2),
+    0 0 45px rgba(77, 201, 255, 0.1),
+    inset 0 0 15px rgba(77, 201, 255, 0.05);
+  text-shadow: 0 0 10px rgba(77, 201, 255, 0.5);
+}
+
+.back-to-menu-button:hover svg {
+  filter: drop-shadow(0 0 4px rgba(77, 201, 255, 0.8));
+}
+
+.back-to-menu-button:active {
+  box-shadow:
+    0 0 10px rgba(77, 201, 255, 0.6),
+    0 0 20px rgba(77, 201, 255, 0.3),
+    inset 0 0 10px rgba(77, 201, 255, 0.1);
+}
+
+.back-to-menu-button svg {
+  flex-shrink: 0;
+  transition: filter 0.3s ease;
+}
+
+.back-to-menu-text {
+  letter-spacing: 0.5px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .back-to-menu-button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .back-to-menu-text {
+    display: none;
+  }
+}

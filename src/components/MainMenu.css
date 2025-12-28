@@ -1,0 +1,212 @@
+.main-menu {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.menu-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at center, #0a0a1a 0%, #000000 100%);
+  z-index: 0;
+}
+
+/* Animated stars background */
+.menu-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, white, transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, white, transparent),
+    radial-gradient(2px 2px at 160px 120px, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1px 1px at 230px 80px, white, transparent),
+    radial-gradient(2px 2px at 300px 150px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 370px 60px, white, transparent),
+    radial-gradient(2px 2px at 450px 200px, rgba(255,255,255,0.8), transparent);
+  background-size: 500px 300px;
+  animation: twinkle 8s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.menu-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 40px;
+}
+
+.menu-title {
+  font-size: 48px;
+  font-weight: 300;
+  color: white;
+  margin: 0 0 12px 0;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  text-shadow: 0 0 30px rgba(77, 201, 255, 0.3);
+}
+
+.menu-subtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 60px 0;
+  letter-spacing: 2px;
+}
+
+.theme-portals {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.theme-portal {
+  position: relative;
+  width: 320px;
+  padding: 40px 30px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  overflow: hidden;
+}
+
+.theme-portal:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(77, 201, 255, 0.5);
+  transform: translateY(-4px);
+}
+
+.portal-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 200%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(77, 201, 255, 0.15) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.theme-portal:hover .portal-glow {
+  opacity: 1;
+}
+
+.portal-content {
+  position: relative;
+  z-index: 1;
+}
+
+.portal-title {
+  font-size: 22px;
+  font-weight: 500;
+  color: white;
+  margin: 0 0 16px 0;
+  letter-spacing: 1px;
+}
+
+.portal-tagline {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 24px 0;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.portal-enter {
+  display: inline-block;
+  padding: 10px 28px;
+  background: transparent;
+  border: 1px solid rgba(77, 201, 255, 0.4);
+  border-radius: 24px;
+  color: rgba(77, 201, 255, 0.9);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.theme-portal:hover .portal-enter {
+  background: rgba(77, 201, 255, 0.1);
+  border-color: rgba(77, 201, 255, 0.8);
+  box-shadow:
+    0 0 20px rgba(77, 201, 255, 0.3),
+    inset 0 0 20px rgba(77, 201, 255, 0.1);
+  color: white;
+  text-shadow: 0 0 10px rgba(77, 201, 255, 0.5);
+}
+
+.menu-hint {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 1px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .menu-title {
+    font-size: 32px;
+    letter-spacing: 4px;
+  }
+
+  .menu-subtitle {
+    font-size: 14px;
+    margin-bottom: 40px;
+  }
+
+  .theme-portals {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .theme-portal {
+    width: 100%;
+    max-width: 300px;
+    padding: 30px 24px;
+  }
+
+  .portal-title {
+    font-size: 18px;
+  }
+
+  .portal-tagline {
+    font-size: 13px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .menu-content {
+    padding: 20px;
+  }
+
+  .menu-title {
+    font-size: 26px;
+    letter-spacing: 3px;
+  }
+
+  .theme-portal {
+    padding: 24px 20px;
+  }
+}

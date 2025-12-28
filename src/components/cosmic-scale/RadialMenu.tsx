@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { celestialObjects } from '../data/objects';
+import { celestialObjects } from '../../data/cosmicScale';
 import './RadialMenu.css';
 
 interface RadialMenuProps {
@@ -48,7 +48,7 @@ export function RadialMenu({ currentIndex, onSelect, disabled }: RadialMenuProps
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentObject = celestialObjects[currentIndex];
 

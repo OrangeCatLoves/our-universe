@@ -1,5 +1,5 @@
-import { useCosmicStore } from '../store/useCosmicStore';
-import { celestialObjects } from '../data/objects';
+import { useCosmicStore } from '../../store/useCosmicStore';
+import { celestialObjects } from '../../data/cosmicScale';
 import './InfoPanel.css';
 
 // Format size with smart unit switching

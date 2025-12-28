@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { celestialObjects } from '../data/objects';
+import { persist } from 'zustand/middleware';
+import { celestialObjects } from '../data/cosmicScale';
 
 export interface VisibleObject {
   id: string;
@@ -20,6 +21,7 @@ interface CosmicStore {
   previous: () => void;
   jumpTo: (index: number) => void;
   setTransitioning: (value: boolean) => void;
+  initializeFromIndex: (index: number) => void;
 }
 
 const MINIMUM_VISIBLE_SCALE = 0.02; // 2% minimum scale to keep objects visible
@@ -27,27 +29,68 @@ const MAX_VISIBLE_OBJECTS = 3; // Keep only 3 recent objects
 
 const CURRENT_OBJECT_SCALE = 1.5; // Scale for the current/main object (1.5 = 50% bigger)
 
-export const useCosmicStore = create<CosmicStore>((set, get) => ({
-  currentIndex: 0,
-  visibleObjects: [
-    {
-      id: celestialObjects[0].id,
-      index: 0,
-      scale: CURRENT_OBJECT_SCALE,
-      positionX: 1.5,
-      positionY: 0,
+// Helper to build visible objects for a given index
+function buildVisibleObjects(index: number): VisibleObject[] {
+  const startIndex = Math.max(0, index - (MAX_VISIBLE_OBJECTS - 1));
+  const newObjects: VisibleObject[] = [];
+
+  for (let i = startIndex; i <= index; i++) {
+    const obj = celestialObjects[i];
+    const distanceFromCurrent = index - i;
+    const cumulativeScale = distanceFromCurrent === 0 ? CURRENT_OBJECT_SCALE : calculateCumulativeScale(i, index);
+
+    newObjects.push({
+      id: obj.id,
+      index: i,
+      scale: Math.max(cumulativeScale, MINIMUM_VISIBLE_SCALE),
+      positionX: distanceFromCurrent === 0 ? 1.5 : -3 - (distanceFromCurrent * 1.5),
+      positionY: distanceFromCurrent === 0 ? 0 : -1.5 - (distanceFromCurrent * 0.8),
       entryFromRight: true,
-    }
-  ],
-  isTransitioning: false,
+    });
+  }
+
+  return newObjects;
+}
+
+export const useCosmicStore = create<CosmicStore>()(
+  persist(
+    (set, get) => ({
+      currentIndex: 0,
+      visibleObjects: [
+        {
+          id: celestialObjects[0].id,
+          index: 0,
+          scale: CURRENT_OBJECT_SCALE,
+          positionX: 1.5,
+          positionY: 0,
+          entryFromRight: true,
+        }
+      ],
+      isTransitioning: false,
+
+      // Initialize visible objects from a persisted index
+      initializeFromIndex: (index: number) => {
+        set({
+          currentIndex: index,
+          visibleObjects: buildVisibleObjects(index),
+          isTransitioning: false,
+        });
+      },
 
   next: () => {
-    const { currentIndex, visibleObjects } = get();
-    const nextIndex = Math.min(currentIndex + 1, celestialObjects.length - 1);
+    const { currentIndex, visibleObjects, isTransitioning } = get();
+    console.log('next() called', { currentIndex, isTransitioning, visibleObjectsLength: visibleObjects.length });
 
-    if (nextIndex === currentIndex) return;
+    const nextIndex = Math.min(currentIndex + 1, celestialObjects.length - 1);
+    console.log('nextIndex:', nextIndex, 'total objects:', celestialObjects.length);
+
+    if (nextIndex === currentIndex) {
+      console.log('Already at last object, returning');
+      return;
+    }
 
     set({ isTransitioning: true });
+    console.log('Setting isTransitioning to true');
 
     const currentObject = celestialObjects[currentIndex];
     const nextObject = celestialObjects[nextIndex];
@@ -133,7 +176,7 @@ export const useCosmicStore = create<CosmicStore>((set, get) => ({
         visibleObjects: updatedObjects,
       });
     } else {
-      // Previous object is not in visible objects - rebuild with entry from LEFT
+      // Previous object is not in visible objects - rebuild
       const startIndex = Math.max(0, prevIndex - (MAX_VISIBLE_OBJECTS - 1));
       const newObjects: VisibleObject[] = [];
 
@@ -148,7 +191,7 @@ export const useCosmicStore = create<CosmicStore>((set, get) => ({
           scale: Math.max(cumulativeScale, MINIMUM_VISIBLE_SCALE),
           positionX: distanceFromCurrent === 0 ? 1.5 : -3 - (distanceFromCurrent * 1.5),
           positionY: distanceFromCurrent === 0 ? 0 : -1.5 - (distanceFromCurrent * 0.8),
-          entryFromRight: false, // Enter from LEFT (backward navigation)
+          entryFromRight: true,
         });
       }
 
@@ -164,9 +207,14 @@ export const useCosmicStore = create<CosmicStore>((set, get) => ({
   },
 
   jumpTo: (index: number) => {
-    if (index < 0 || index >= celestialObjects.length) return;
+    console.log('jumpTo() called with index:', index);
+    if (index < 0 || index >= celestialObjects.length) {
+      console.log('Index out of bounds, returning');
+      return;
+    }
 
     set({ isTransitioning: true });
+    console.log('jumpTo: Setting isTransitioning to true');
 
     const startIndex = Math.max(0, index - (MAX_VISIBLE_OBJECTS - 1));
     const newObjects: VisibleObject[] = [];
@@ -197,7 +245,25 @@ export const useCosmicStore = create<CosmicStore>((set, get) => ({
   },
 
   setTransitioning: (value: boolean) => set({ isTransitioning: value }),
-}));
+    }),
+    {
+      name: 'our-universe-cosmic',
+      partialize: (state) => ({ currentIndex: state.currentIndex }),
+      onRehydrateStorage: () => (state) => {
+        // Rebuild visible objects from persisted index on rehydration
+        if (state) {
+          // Use setTimeout to ensure store is ready, then properly set state
+          setTimeout(() => {
+            useCosmicStore.setState({
+              visibleObjects: buildVisibleObjects(state.currentIndex),
+              isTransitioning: false,
+            });
+          }, 0);
+        }
+      },
+    }
+  )
+);
 
 function calculateCumulativeScale(fromIndex: number, toIndex: number): number {
   if (fromIndex >= toIndex) return 1;

@@ -1,17 +1,7 @@
-export interface CelestialObject {
-  id: string;
-  name: string;
-  sizeKm: number; // diameter in kilometers
-  type: string;
-  category: 'sphere' | 'static';
-  color: string; // fallback color
-  texture?: string; // filename for sphere textures
-  image?: string; // filename for static images
-  discoveryDate?: string;
-  discoveredBy?: string;
-  description: string;
-  funFacts: string[];
-}
+import type { CelestialObject } from './types';
+
+// Re-export the type for backward compatibility
+export type { CelestialObject } from './types';
 
 // Objects sorted by size (smallest to largest)
 export const celestialObjects: CelestialObject[] = [

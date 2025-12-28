@@ -1,7 +1,7 @@
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { useCosmicStore } from '../store/useCosmicStore';
-import { celestialObjects } from '../data/objects';
+import { useCosmicStore } from '../../store/useCosmicStore';
+import { celestialObjects } from '../../data/cosmicScale';
 import { CelestialObject } from './CelestialObject';
 import { Suspense, useEffect, useState, useRef } from 'react';
 import * as THREE from 'three';

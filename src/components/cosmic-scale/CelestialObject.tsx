@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useSpring, animated } from '@react-spring/three';
 import { Billboard } from '@react-three/drei';
-import type { CelestialObject as CelestialObjectType } from '../data/objects';
+import type { CelestialObject as CelestialObjectType } from '../../data/cosmicScale';
 import * as THREE from 'three';
 
 // Shader to make dark pixels transparent (for space images with black backgrounds)
@@ -111,7 +111,7 @@ function SaturnRings() {
     const loader = new THREE.TextureLoader();
 
     loader.load(
-      '/textures/saturn-rings.jpg',
+      '/textures/cosmic-scale/saturn-rings.jpg',
       (tex) => {
         if (isMounted) {
           tex.colorSpace = THREE.SRGBColorSpace;
@@ -178,14 +178,16 @@ function SaturnRings() {
 export function CelestialObject({ object, scale, positionX, positionY, entryFromRight }: Props) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
-  const [textureLoaded, setTextureLoaded] = useState(false);
+  const [_textureLoaded, setTextureLoaded] = useState(false);
 
   // Animate position and scale
+  // When entering from right (forward nav): animate from right side
+  // When backward nav (entryFromRight=false): start at target position
   const { animatedScale, animatedPositionX, animatedPositionY } = useSpring({
     from: {
-      animatedScale: entryFromRight ? 1.5 : 0.02,
-      animatedPositionX: entryFromRight ? 5 : -5,
-      animatedPositionY: entryFromRight ? 0 : -2,
+      animatedScale: entryFromRight ? 1.5 : scale,
+      animatedPositionX: entryFromRight ? 5 : positionX,
+      animatedPositionY: entryFromRight ? 0 : positionY,
     },
     to: {
       animatedScale: scale,
@@ -202,10 +204,10 @@ export function CelestialObject({ object, scale, positionX, positionY, entryFrom
 
     if (object.category === 'sphere' && object.texture) {
       const loader = new THREE.TextureLoader();
-      console.log(`Loading texture: /textures/${object.texture}`);
+      console.log(`Loading texture: /textures/cosmic-scale/${object.texture}`);
 
       loader.load(
-        `/textures/${object.texture}`,
+        `/textures/cosmic-scale/${object.texture}`,
         (tex) => {
           if (isMounted) {
             console.log(`Texture loaded successfully for ${object.name}`, tex);

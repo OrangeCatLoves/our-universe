@@ -1,0 +1,270 @@
+.star-path-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 70%, transparent 100%);
+  z-index: 10;
+}
+
+.star-path-progress {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.progress-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 1px;
+}
+
+.star-path-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Navigation buttons */
+.star-path-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.star-path-button:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 0 15px rgba(255, 255, 255, 0.3),
+    0 0 30px rgba(255, 255, 255, 0.15),
+    inset 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
+.star-path-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.star-path-button svg {
+  transition: filter 0.3s ease;
+}
+
+.star-path-button:hover:not(:disabled) svg {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+}
+
+/* Star Path Dots Container */
+.star-path-dots {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+}
+
+/* Connecting line */
+.star-path-line {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 10%,
+    rgba(255, 255, 255, 0.2) 90%,
+    transparent 100%
+  );
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* Individual dot button */
+.star-path-dot {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.star-path-dot:disabled {
+  cursor: not-allowed;
+}
+
+/* Dot inner circle */
+.dot-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+  animation: subtle-pulse 3s ease-in-out infinite;
+}
+
+/* Past dots - slightly dimmer */
+.star-path-dot.past .dot-inner {
+  background: rgba(255, 255, 255, 0.6);
+  animation: none;
+}
+
+/* Hovered dot */
+.star-path-dot.hovered .dot-inner {
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Current dot - larger and pulsing */
+.star-path-dot.current .dot-inner {
+  width: 14px;
+  height: 14px;
+  background: white;
+  animation: current-pulse 2s ease-in-out infinite;
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.8),
+    0 0 16px rgba(255, 255, 255, 0.4),
+    0 0 24px rgba(255, 255, 255, 0.2);
+}
+
+/* Tooltip */
+.dot-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  margin-bottom: 8px;
+}
+
+.star-path-dot:hover .dot-tooltip,
+.star-path-dot.current .dot-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.star-path-dot.current .dot-tooltip {
+  background: rgba(77, 201, 255, 0.2);
+  border-color: rgba(77, 201, 255, 0.4);
+}
+
+/* Keyboard hint */
+.star-path-hint {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Animations */
+@keyframes subtle-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes current-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(255, 255, 255, 0.8),
+      0 0 16px rgba(255, 255, 255, 0.4),
+      0 0 24px rgba(255, 255, 255, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 12px rgba(255, 255, 255, 1),
+      0 0 24px rgba(255, 255, 255, 0.6),
+      0 0 36px rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .star-path-nav {
+    padding: 16px;
+  }
+
+  .star-path-controls {
+    gap: 12px;
+  }
+
+  .star-path-dots {
+    gap: 10px;
+    padding: 8px 12px;
+  }
+
+  .star-path-dot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .dot-inner {
+    width: 6px;
+    height: 6px;
+  }
+
+  .star-path-dot.current .dot-inner {
+    width: 10px;
+    height: 10px;
+  }
+
+  .star-path-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dot-tooltip {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+/* Very small screens - hide some dots if needed */
+@media (max-width: 480px) {
+  .star-path-dots {
+    gap: 8px;
+    padding: 6px 8px;
+    overflow-x: auto;
+    max-width: calc(100vw - 140px);
+  }
+
+  .star-path-hint {
+    font-size: 11px;
+  }
+}
