@@ -13,6 +13,7 @@ dist-ssr
 *.local
 CLAUDE.md
 IMPROVEMENTS.md
+NASA_EYES_EXOPLANET_TEXTURE_CONTEXT.md
 
 # Editor directories and files
 .vscode/*
