@@ -11,7 +11,16 @@ function MainMenu() {
 
   return (
     <div className="main-menu">
-      <div className="menu-background" />
+      <div className="menu-background">
+        <video
+          className="menu-video"
+          autoPlay
+          loop
+          muted
+          playsInline
+          src="/videos/space-animation.mp4"
+        />
+      </div>
 
       <div className="menu-content">
         <h1 className="menu-title">Our Universe</h1>
