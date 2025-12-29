@@ -4,6 +4,7 @@ import { useSpring, animated } from '@react-spring/three';
 import { Billboard } from '@react-three/drei';
 import type { CelestialObject as CelestialObjectType } from '../../data/cosmicScale';
 import * as THREE from 'three';
+import { getCachedTexture, loadTexture } from '../../utils/textureCache';
 
 // Shader to make dark pixels transparent (for space images with black backgrounds)
 const transparentDarkVertexShader = `
@@ -197,49 +198,37 @@ export function CelestialObject({ object, scale, positionX, positionY, entryFrom
     config: { tension: 80, friction: 26 },
   });
 
-  // Load texture for spheres
+  // Load texture for spheres - check cache first for instant display
   useEffect(() => {
     let isMounted = true;
-    let loadedTexture: THREE.Texture | null = null;
 
     if (object.category === 'sphere' && object.texture) {
-      const loader = new THREE.TextureLoader();
-      console.log(`Loading texture: /textures/cosmic-scale/${object.texture}`);
+      const path = `/textures/cosmic-scale/${object.texture}`;
 
-      loader.load(
-        `/textures/cosmic-scale/${object.texture}`,
-        (tex) => {
-          if (isMounted) {
-            console.log(`Texture loaded successfully for ${object.name}`, tex);
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.needsUpdate = true;
-            loadedTexture = tex;
-            setTexture(tex);
-            setTextureLoaded(true);
-          }
-        },
-        (progress) => {
-          console.log(`Loading progress for ${object.name}:`, progress);
-        },
-        (error) => {
-          console.log(`Texture not found for ${object.name}, using fallback color`, error);
-          if (isMounted) {
-            setTexture(null);
-            setTextureLoaded(true);
-          }
+      // Check cache first for instant display
+      const cached = getCachedTexture(path);
+      if (cached) {
+        setTexture(cached);
+        setTextureLoaded(true);
+        return;
+      }
+
+      // Load via cache system (will be cached for future use)
+      loadTexture(path).then((tex) => {
+        if (isMounted) {
+          setTexture(tex);
+          setTextureLoaded(true);
         }
-      );
+      });
     } else {
       setTextureLoaded(true);
     }
 
     return () => {
       isMounted = false;
-      if (loadedTexture) {
-        loadedTexture.dispose();
-      }
+      // Don't dispose - textures are managed by the cache
     };
-  }, [object.id, object.texture, object.category, object.name]);
+  }, [object.id, object.texture, object.category]);
 
   // Rotate spheres
   useFrame((_, delta) => {
@@ -312,40 +301,38 @@ function StaticImage({ object }: { object: CelestialObjectType }) {
 
   useEffect(() => {
     let isMounted = true;
-    let loadedTexture: THREE.Texture | null = null;
 
     if (object.image) {
-      const loader = new THREE.TextureLoader();
-      loader.load(
-        `/images/cosmic-scale/${object.image}`,
-        (tex) => {
-          if (isMounted) {
-            tex.colorSpace = THREE.SRGBColorSpace;
-            const image = tex.image;
-            if (image && image.width && image.height) {
-              setAspectRatio(image.width / image.height);
-            }
-            loadedTexture = tex;
-            setTexture(tex);
-          }
-        },
-        undefined,
-        () => {
-          console.log(`Image not found for ${object.name}, using fallback`);
-          if (isMounted) {
-            setTexture(null);
-          }
+      const path = `/images/cosmic-scale/${object.image}`;
+
+      // Check cache first for instant display
+      const cached = getCachedTexture(path);
+      if (cached) {
+        const image = cached.image as HTMLImageElement | undefined;
+        if (image && image.width && image.height) {
+          setAspectRatio(image.width / image.height);
         }
-      );
+        setTexture(cached);
+        return;
+      }
+
+      // Load via cache system
+      loadTexture(path).then((tex) => {
+        if (isMounted && tex) {
+          const image = tex.image as HTMLImageElement | undefined;
+          if (image && image.width && image.height) {
+            setAspectRatio(image.width / image.height);
+          }
+          setTexture(tex);
+        }
+      });
     }
 
     return () => {
       isMounted = false;
-      if (loadedTexture) {
-        loadedTexture.dispose();
-      }
+      // Don't dispose - textures are managed by the cache
     };
-  }, [object.image, object.name]);
+  }, [object.image]);
 
   if (texture) {
     // Black holes get a larger base size for more imposing presence

@@ -5,6 +5,7 @@ import { celestialObjects } from '../../data/cosmicScale';
 import { CelestialObject } from './CelestialObject';
 import { Suspense, useEffect, useState, useRef } from 'react';
 import * as THREE from 'three';
+import { preloadNearbyTextures } from '../../utils/textureCache';
 
 // Component to load and set the cubemap skybox
 function Skybox() {
@@ -112,6 +113,17 @@ function CameraController({ isObservableUniverse }: { isObservableUniverse: bool
 
 export function Scene() {
   const { visibleObjects, currentIndex } = useCosmicStore();
+
+  // Preload textures for nearby objects when currentIndex changes
+  useEffect(() => {
+    // Preload current + next 4 + previous 2 objects
+    preloadNearbyTextures(currentIndex, 4);
+  }, [currentIndex]);
+
+  // Initial preload on mount - load more objects for smoother start
+  useEffect(() => {
+    preloadNearbyTextures(currentIndex, 6);
+  }, []);
 
   // Disable camera controls when viewing Observable Universe
   const isObservableUniverse = celestialObjects[currentIndex]?.id === 'observable-universe';
