@@ -94,6 +94,11 @@ function isBlackHole(type: string): boolean {
   return type.toLowerCase().includes('black hole');
 }
 
+// Helper to check if object is a void (should be dark, ignore lighting)
+function isVoid(type: string): boolean {
+  return type.toLowerCase().includes('void');
+}
+
 // Saturn's rings component
 function SaturnRings() {
   const ringsRef = useRef<THREE.Mesh>(null);
@@ -256,12 +261,20 @@ export function CelestialObject({ object, scale, positionX, positionY, entryFrom
                 map={texture}
                 toneMapped={false}
               />
+            ) : isVoid(object.type) ? (
+              // Voids use meshBasicMaterial with dark color - ignores lighting, stays dark
+              <meshBasicMaterial
+                key={'void-' + object.id}
+                color={object.color}
+              />
             ) : (
               // Non-stars use meshStandardMaterial - responds to lighting
               <meshStandardMaterial
                 key={texture?.uuid ?? 'fallback'}
                 color={texture ? '#ffffff' : object.color}
                 map={texture}
+                roughness={0.65}
+                metalness={0.1}
               />
             )}
           </mesh>
@@ -367,7 +380,7 @@ function StaticImage({ object }: { object: CelestialObjectType }) {
     <Billboard follow={true}>
       <mesh>
         <sphereGeometry args={[1, 32, 32]} />
-        <meshStandardMaterial color={object.color} />
+        <meshStandardMaterial color={object.color} roughness={0.65} metalness={0.1} />
       </mesh>
     </Billboard>
   );

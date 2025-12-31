@@ -143,6 +143,8 @@ export function ExoplanetObject({ planet, isEntering, isExiting, navigationDirec
             key={texture?.uuid ?? 'fallback'}
             color={texture ? '#ffffff' : planet.color}
             map={texture}
+            roughness={0.65}
+            metalness={0.1}
             transparent={true}
             opacity={targetState.opacity}
           />
@@ -251,6 +253,8 @@ function StaticImage({ planet, animatedOpacity }: { planet: Exoplanet; animatedO
         <meshStandardMaterial
           ref={fallbackMaterialRef}
           color={planet.color}
+          roughness={0.65}
+          metalness={0.1}
           transparent={true}
           opacity={1}
         />

@@ -132,6 +132,10 @@ export function Scene() {
     <div style={{ width: '100%', height: '100%' }}>
       <Canvas
         camera={{ position: [0, 2, 8], fov: 50 }}
+        gl={{
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.2,
+        }}
       >
         {/* Cubemap Skybox */}
         <Suspense fallback={null}>
@@ -144,10 +148,15 @@ export function Scene() {
         {/* Camera controller - resets camera when entering Observable Universe */}
         <CameraController isObservableUniverse={isObservableUniverse} />
 
-        {/* Lighting - increased ambient for better visibility */}
-        <ambientLight intensity={0.6} />
-        <pointLight position={[10, 10, 10]} intensity={1} />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} />
+        {/* Balanced lighting */}
+        <ambientLight intensity={1.0} />
+
+        {/* Front light for even illumination */}
+        <directionalLight
+          position={[0, 0, 10]}
+          intensity={0.8}
+          color="#ffffff"
+        />
 
         {/* Render all visible celestial objects */}
         <Suspense fallback={null}>

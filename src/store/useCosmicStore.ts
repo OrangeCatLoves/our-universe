@@ -25,7 +25,7 @@ interface CosmicStore {
 }
 
 const MINIMUM_VISIBLE_SCALE = 0.02; // 2% minimum scale to keep objects visible
-const MAX_VISIBLE_OBJECTS = 3; // Keep only 3 recent objects
+const MAX_VISIBLE_OBJECTS = 2; // Keep only 2 recent objects (current + 1 previous)
 
 const CURRENT_OBJECT_SCALE = 1.5; // Scale for the current/main object (1.5 = 50% bigger)
 

@@ -723,9 +723,9 @@ export const celestialObjects: CelestialObject[] = [
     name: 'Boötes Void',
     sizeKm: 3122130000000000000000,
     type: 'Supervoid',
-    category: 'static',
+    category: 'sphere',
     color: '#0a0a14',
-    image: 'bootes-void.png',
+    // Voids render as dark spheres (no image) - represents empty space
     discoveryDate: '1981',
     discoveredBy: 'Robert Kirshner et al.',
     description: 'One of the largest known voids in the universe - a vast, nearly empty region of space.',
