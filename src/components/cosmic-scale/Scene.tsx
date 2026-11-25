@@ -148,15 +148,8 @@ export function Scene() {
         {/* Camera controller - resets camera when entering Observable Universe */}
         <CameraController isObservableUniverse={isObservableUniverse} />
 
-        {/* Balanced lighting */}
-        <ambientLight intensity={1.0} />
-
-        {/* Front light for even illumination */}
-        <directionalLight
-          position={[0, 0, 10]}
-          intensity={0.8}
-          color="#ffffff"
-        />
+        {/* Uniform ambient-only lighting - no directional to avoid edge shadows */}
+        <ambientLight intensity={1.5} />
 
         {/* Render all visible celestial objects */}
         <Suspense fallback={null}>

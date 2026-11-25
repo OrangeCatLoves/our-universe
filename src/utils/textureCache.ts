@@ -7,6 +7,11 @@ const loadingPromises = new Map<string, Promise<THREE.Texture | null>>();
 
 const loader = new THREE.TextureLoader();
 
+// Dev-only draft variant picker, read once at startup (survives in-app redirects)
+const DRAFT_VARIANT = import.meta.env.DEV
+  ? (new URLSearchParams(window.location.search).get('variant') ?? '').replace(/[^a-z0-9-]/gi, '')
+  : '';
+
 /**
  * Get a texture from cache, or null if not cached
  */
@@ -28,23 +33,44 @@ export function loadTexture(path: string): Promise<THREE.Texture | null> {
     return loadingPromises.get(path)!;
   }
 
-  // Start new load
+  // Start new load. Dev only: a draft texture at /draft<path> (from <project>/draft/) takes
+  // priority so it can be reviewed before being promoted to public/. Cache key stays `path`.
+  // `?variant=name` in the page URL first tries /draft<path with .name before the extension>,
+  // e.g. ?variant=cmb -> /draft/images/cosmic-scale/observable-universe.cmb.jpg
+  const candidates = import.meta.env.DEV
+    ? [
+        ...(DRAFT_VARIANT ? [`/draft${path.replace(/(\.[a-z0-9]+)$/i, `.${DRAFT_VARIANT}$1`)}`] : []),
+        `/draft${path}`,
+        path,
+      ]
+    : [path];
+
   const promise = new Promise<THREE.Texture | null>((resolve) => {
-    loader.load(
-      path,
-      (texture) => {
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.needsUpdate = true;
-        textureCache.set(path, texture);
-        loadingPromises.delete(path);
-        resolve(texture);
-      },
-      undefined,
-      () => {
-        loadingPromises.delete(path);
-        resolve(null);
-      }
-    );
+    const tryLoad = (i: number) => {
+      loader.load(
+        candidates[i],
+        (texture) => {
+          texture.colorSpace = THREE.SRGBColorSpace;
+          texture.needsUpdate = true;
+          textureCache.set(path, texture);
+          loadingPromises.delete(path);
+          if (candidates[i].startsWith('/draft/')) {
+            console.log(`Using DRAFT texture: ${candidates[i]}`);
+          }
+          resolve(texture);
+        },
+        undefined,
+        () => {
+          if (i + 1 < candidates.length) {
+            tryLoad(i + 1);
+            return;
+          }
+          loadingPromises.delete(path);
+          resolve(null);
+        }
+      );
+    };
+    tryLoad(0);
   });
 
   loadingPromises.set(path, promise);

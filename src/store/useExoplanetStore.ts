@@ -85,6 +85,12 @@ export const useExoplanetStore = create<ExoplanetStore>()(
     {
       name: 'our-universe-exoplanets',
       partialize: (state) => ({ currentIndex: state.currentIndex }),
+      // Clamp saved progress in case the list got shorter (e.g. TRAPPIST-1 at index 11 was removed)
+      merge: (persisted, current) => {
+        const saved = (persisted as { currentIndex?: number } | undefined)?.currentIndex ?? 0;
+        const currentIndex = Math.min(Math.max(saved, 0), exoplanets.length - 1);
+        return { ...current, currentIndex };
+      },
     }
   )
 );

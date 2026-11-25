@@ -1,8 +1,9 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useSpring, animated, SpringValue } from '@react-spring/three';
 import { Billboard } from '@react-three/drei';
 import type { Exoplanet } from '../../data/extremeExoplanets';
+import type { PlanetRings as PlanetRingsData } from '../../data/types';
 import * as THREE from 'three';
 
 // Shader for static images with transparent dark backgrounds
@@ -18,15 +19,58 @@ const transparentDarkFragmentShader = `
   uniform sampler2D map;
   uniform float threshold;
   uniform float smoothness;
+  uniform float useImageAlpha; // 1.0 for images with a real alpha channel (.webp/.png)
+  uniform float opacity;
   varying vec2 vUv;
 
   void main() {
     vec4 texColor = texture2D(map, vUv);
     float luminance = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
-    float alpha = smoothstep(threshold, threshold + smoothness, luminance);
-    gl_FragColor = vec4(texColor.rgb, alpha * texColor.a);
+    float lumAlpha = smoothstep(threshold, threshold + smoothness, luminance);
+    float alpha = mix(lumAlpha, 1.0, useImageAlpha) * texColor.a;
+    gl_FragColor = vec4(texColor.rgb, alpha * opacity);
+    // Convert back to the output colour space (the sRGB texture is sampled as linear);
+    // without this, static images render noticeably darker than the source file.
+    #include <colorspace_fragment>
   }
 `;
+
+/**
+ * Load /<folder>/exoplanets/<file>. Dev only: a draft in <project>/draft/<folder>/exoplanets/
+ * takes priority so it can be reviewed before being promoted to public/ (never in production).
+ */
+function loadExoplanetTexture(
+  file: string,
+  onLoad: (tex: THREE.Texture) => void,
+  onFail: (error: unknown) => void,
+  folder: 'textures' | 'images' = 'textures'
+) {
+  const loader = new THREE.TextureLoader();
+  const candidates = [
+    ...(import.meta.env.DEV ? [`/draft/${folder}/exoplanets/${file}`] : []),
+    `/${folder}/exoplanets/${file}`,
+  ];
+  const tryLoad = (i: number) => {
+    loader.load(
+      candidates[i],
+      (tex) => {
+        console.log(`Texture loaded: ${candidates[i]}`);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.needsUpdate = true;
+        onLoad(tex);
+      },
+      undefined,
+      (error) => {
+        if (i + 1 < candidates.length) {
+          tryLoad(i + 1);
+        } else {
+          onFail(error);
+        }
+      }
+    );
+  };
+  tryLoad(0);
+}
 
 interface Props {
   planet: Exoplanet;
@@ -82,21 +126,16 @@ export function ExoplanetObject({ planet, isEntering, isExiting, navigationDirec
     let loadedTexture: THREE.Texture | null = null;
 
     if (planet.category === 'sphere' && planet.texture) {
-      const loader = new THREE.TextureLoader();
-      console.log(`Loading exoplanet texture: /textures/exoplanets/${planet.texture}`);
-
-      loader.load(
-        `/textures/exoplanets/${planet.texture}`,
+      loadExoplanetTexture(
+        planet.texture,
         (tex) => {
           if (isMounted) {
-            console.log(`Texture loaded for ${planet.name}`);
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.needsUpdate = true;
             loadedTexture = tex;
             setTexture(tex);
+          } else {
+            tex.dispose();
           }
         },
-        undefined,
         (error) => {
           console.log(`Texture not found for ${planet.name}, using fallback color`, error);
           if (isMounted) {
@@ -136,19 +175,23 @@ export function ExoplanetObject({ planet, isEntering, isExiting, navigationDirec
       scale={animatedScale as unknown as number}
     >
       {planet.category === 'sphere' ? (
-        <mesh ref={meshRef}>
-          <sphereGeometry args={[1, 64, 64]} />
-          <meshStandardMaterial
-            ref={materialRef}
-            key={texture?.uuid ?? 'fallback'}
-            color={texture ? '#ffffff' : planet.color}
-            map={texture}
-            roughness={0.65}
-            metalness={0.1}
-            transparent={true}
-            opacity={targetState.opacity}
-          />
-        </mesh>
+        // Ringed planets tilt as a whole so the spin axis stays perpendicular to the rings
+        <group rotation={planet.rings?.tilt ?? [0, 0, 0]}>
+          <mesh ref={meshRef}>
+            <sphereGeometry args={[1, 64, 64]} />
+            <meshStandardMaterial
+              ref={materialRef}
+              key={texture?.uuid ?? 'fallback'}
+              color={texture ? '#ffffff' : planet.color}
+              map={texture}
+              roughness={0.65}
+              metalness={0.1}
+              transparent={true}
+              opacity={targetState.opacity}
+            />
+          </mesh>
+          {planet.rings && <PlanetRings rings={planet.rings} animatedOpacity={animatedOpacity} />}
+        </group>
       ) : (
         <StaticImage planet={planet} animatedOpacity={animatedOpacity} />
       )}
@@ -156,16 +199,90 @@ export function ExoplanetObject({ planet, isEntering, isExiting, navigationDirec
   );
 }
 
-// Static image component for the TRAPPIST-1 system
+// Ring system (e.g. J1407b). The texture is a radial RGBA strip: x = inner edge -> outer edge.
+function PlanetRings({ rings, animatedOpacity }: { rings: PlanetRingsData; animatedOpacity: SpringValue<number> }) {
+  const materialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
+  const maxAnisotropy = useThree((state) => state.gl.capabilities.getMaxAnisotropy());
+
+  useEffect(() => {
+    let isMounted = true;
+    let loaded: THREE.Texture | null = null;
+    loadExoplanetTexture(
+      rings.texture,
+      (tex) => {
+        if (!isMounted) {
+          tex.dispose();
+          return;
+        }
+        tex.anisotropy = maxAnisotropy; // rings are seen at grazing angles
+        loaded = tex;
+        setTexture(tex);
+      },
+      (error) => console.log(`Ring texture not found: ${rings.texture}`, error)
+    );
+    return () => {
+      isMounted = false;
+      loaded?.dispose();
+    };
+  }, [rings.texture, maxAnisotropy]);
+
+  // Flat annulus with UVs remapped so u runs radially across the strip texture
+  const geometry = useMemo(() => {
+    const { innerRadius, outerRadius } = rings;
+    const geo = new THREE.RingGeometry(innerRadius, outerRadius, 256, 24);
+    const pos = geo.attributes.position;
+    const uv = geo.attributes.uv;
+    for (let i = 0; i < pos.count; i++) {
+      const r = Math.hypot(pos.getX(i), pos.getY(i));
+      uv.setXY(i, (r - innerRadius) / (outerRadius - innerRadius), 0.5);
+    }
+    return geo;
+  }, [rings]);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
+  useFrame(() => {
+    if (materialRef.current) {
+      materialRef.current.opacity = animatedOpacity.get();
+    }
+  });
+
+  if (!texture) return null;
+
+  return (
+    // RingGeometry lies in XY; rotate into the planet's equatorial (XZ) plane.
+    // renderOrder 1 draws after the planet so the planet correctly hides the far side.
+    <mesh geometry={geometry} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
+      <meshStandardMaterial
+        ref={materialRef}
+        map={texture}
+        roughness={0.9}
+        metalness={0}
+        transparent={true}
+        side={THREE.DoubleSide}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
+// Static image component (for objects with category 'static')
 function StaticImage({ planet, animatedOpacity }: { planet: Exoplanet; animatedOpacity: SpringValue<number> }) {
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [aspectRatio, setAspectRatio] = useState<number>(1);
   const fallbackMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const imageMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  // Images with a real alpha channel skip the dark-pixels-become-transparent trick
+  const hasAlpha = /\.(webp|png)$/i.test(planet.image ?? '');
 
-  // Animate fallback material opacity
+  // Animate fallback material / image opacity
   useFrame(() => {
     if (fallbackMaterialRef.current) {
       fallbackMaterialRef.current.opacity = animatedOpacity.get();
+    }
+    if (imageMaterialRef.current) {
+      imageMaterialRef.current.uniforms.opacity.value = animatedOpacity.get();
     }
   });
 
@@ -173,7 +290,9 @@ function StaticImage({ planet, animatedOpacity }: { planet: Exoplanet; animatedO
     map: { value: null as THREE.Texture | null },
     threshold: { value: 0.05 },
     smoothness: { value: 0.1 },
-  }), []);
+    useImageAlpha: { value: hasAlpha ? 1.0 : 0.0 },
+    opacity: { value: 1.0 },
+  }), [hasAlpha]);
 
   useEffect(() => {
     if (texture) {
@@ -186,27 +305,27 @@ function StaticImage({ planet, animatedOpacity }: { planet: Exoplanet; animatedO
     let loadedTexture: THREE.Texture | null = null;
 
     if (planet.image) {
-      const loader = new THREE.TextureLoader();
-      loader.load(
-        `/images/exoplanets/${planet.image}`,
+      loadExoplanetTexture(
+        planet.image,
         (tex) => {
-          if (isMounted) {
-            tex.colorSpace = THREE.SRGBColorSpace;
-            const image = tex.image;
-            if (image && image.width && image.height) {
-              setAspectRatio(image.width / image.height);
-            }
-            loadedTexture = tex;
-            setTexture(tex);
+          if (!isMounted) {
+            tex.dispose();
+            return;
           }
+          const image = tex.image as HTMLImageElement | undefined;
+          if (image && image.width && image.height) {
+            setAspectRatio(image.width / image.height);
+          }
+          loadedTexture = tex;
+          setTexture(tex);
         },
-        undefined,
         () => {
           console.log(`Image not found for ${planet.name}, using fallback`);
           if (isMounted) {
             setTexture(null);
           }
-        }
+        },
+        'images'
       );
     }
 
@@ -219,7 +338,8 @@ function StaticImage({ planet, animatedOpacity }: { planet: Exoplanet; animatedO
   }, [planet.image, planet.name]);
 
   if (texture) {
-    const baseSize = 3.5;
+    // Wide images get extra width so their details stay readable
+    const baseSize = aspectRatio > 1.5 ? 5.0 : 3.5;
     let width = baseSize;
     let height = baseSize;
 
@@ -234,6 +354,7 @@ function StaticImage({ planet, animatedOpacity }: { planet: Exoplanet; animatedO
         <mesh>
           <planeGeometry args={[width, height]} />
           <shaderMaterial
+            ref={imageMaterialRef}
             vertexShader={transparentDarkVertexShader}
             fragmentShader={transparentDarkFragmentShader}
             uniforms={uniforms}

@@ -149,6 +149,14 @@ export const exoplanets: Exoplanet[] = [
     category: 'sphere',
     color: '#DAA520',
     texture: 'j1407b.jpg',
+    // Cinematic scale: real rings reach ~1,000x the planet radius; 8x keeps the planet readable
+    // while the rings still sweep off-screen. Inner/outer must match draft/generate_textures.py.
+    rings: {
+      texture: 'j1407b-rings.png',
+      innerRadius: 1.4,
+      outerRadius: 8,
+      tilt: [0.19, 0, -0.35], // ~25 deg view onto the ring plane from the default camera
+    },
     description: 'A planet with a ring system 200 times larger than Saturn\'s - visible from Earth if it were in our solar system.',
     funFacts: [
       'Ring system spans 120 million kilometers in diameter',
@@ -246,26 +254,5 @@ export const exoplanets: Exoplanet[] = [
     orbitalPeriodDays: 385,
     discoveryYear: 2015,
     keyFeature: 'Earth\'s cousin in a Sun-like system'
-  },
-  {
-    id: 'trappist-1-system',
-    name: 'TRAPPIST-1 System',
-    type: 'Planetary System',
-    category: 'static',
-    color: '#FF6347',
-    image: 'trappist-1.jpg',
-    description: 'Seven Earth-sized worlds orbiting a single star - with three in the habitable zone.',
-    funFacts: [
-      'Contains seven Earth-sized rocky planets',
-      'Three planets (e, f, g) are in the habitable zone',
-      'All seven planets are closer to their star than Mercury is to the Sun',
-      'The planets are so close together you could see features of neighboring worlds from their surfaces',
-      'Named after the telescope that discovered them in Chile'
-    ],
-    distanceLightYears: 40,
-    hostStar: 'TRAPPIST-1',
-    orbitalPeriodDays: 12.4, // Planet e (middle of habitable zone)
-    discoveryYear: 2017,
-    keyFeature: 'Seven Earth-sized worlds, three habitable'
   }
 ];

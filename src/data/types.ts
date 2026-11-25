@@ -20,8 +20,17 @@ export interface CelestialObject extends BaseCelestialObject {
   discoveredBy?: string;
 }
 
+// Ring system for ringed planets (e.g. J1407b)
+export interface PlanetRings {
+  texture: string;      // RGBA radial strip in textures/exoplanets/: x = inner edge -> outer edge
+  innerRadius: number;  // in planet radii
+  outerRadius: number;  // in planet radii
+  tilt: [number, number, number]; // Euler XYZ (radians) applied to planet + rings so bands align
+}
+
 // Exoplanet theme object (extends base with exoplanet-specific fields)
 export interface Exoplanet extends BaseCelestialObject {
+  rings?: PlanetRings;
   distanceLightYears: number;
   hostStar: string;
   orbitalPeriodDays: number;
