@@ -157,13 +157,14 @@ export function Scene() {
             const object = celestialObjects[visibleObj.index];
             return (
               <CelestialObject
-                key={visibleObj.id}
+                key={`${visibleObj.id}#${visibleObj.mountId}`}
                 object={object}
                 scale={visibleObj.scale}
                 positionX={visibleObj.positionX}
                 positionY={visibleObj.positionY}
                 isCurrent={visibleObj.index === currentIndex}
-                entryFromRight={visibleObj.entryFromRight}
+                enterFrom={visibleObj.enterFrom}
+                exitToken={visibleObj.exiting ? visibleObj.exitToken : undefined}
               />
             );
           })}

@@ -102,7 +102,7 @@ export const exoplanets: Exoplanet[] = [
     name: 'KELT-9b',
     type: 'Ultra-Hot Jupiter',
     category: 'sphere',
-    color: '#E6E6FA',
+    color: '#FFB347', // fallback if the texture fails: white-hot orange, not lavender
     texture: 'kelt-9b.jpg',
     description: 'The hottest known exoplanet - its day side is hotter than most stars in the galaxy.',
     funFacts: [

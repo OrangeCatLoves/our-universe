@@ -5,6 +5,8 @@ import { Billboard } from '@react-three/drei';
 import type { CelestialObject as CelestialObjectType } from '../../data/cosmicScale';
 import * as THREE from 'three';
 import { getCachedTexture, loadTexture } from '../../utils/textureCache';
+import { SPAWN_RIGHT_X, OFFSCREEN_LEFT_X, useCosmicStore } from '../../store/useCosmicStore';
+import type { EntryDirection } from '../../store/useCosmicStore';
 
 // Shader to make dark pixels transparent (for space images with black backgrounds)
 const transparentDarkVertexShader = `
@@ -76,7 +78,8 @@ interface Props {
   positionX: number;
   positionY: number;
   isCurrent: boolean;
-  entryFromRight: boolean;
+  enterFrom: EntryDirection;
+  exitToken?: number; // set while this object is sliding out off the right edge (backward navigation)
 }
 
 // Helper to check if object is a star (should be self-luminous)
@@ -181,26 +184,39 @@ function SaturnRings() {
   );
 }
 
-export function CelestialObject({ object, scale, positionX, positionY, entryFromRight }: Props) {
+export function CelestialObject({ object, scale, positionX, positionY, enterFrom, exitToken }: Props) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [_textureLoaded, setTextureLoaded] = useState(false);
 
-  // Animate position and scale
-  // When entering from right (forward nav): animate from right side
-  // When backward nav (entryFromRight=false): start at target position
+  // Animate position and scale with one spring for every move. `from` only applies on mount:
+  //  - 'right': forward nav, the new current object slides in from the spawn point on the right
+  //  - 'left':  backward nav, an object that wasn't on screen slides in from off the left edge at its
+  //             target height and size (the planet before the previous one, or a jump target)
+  // Objects already on screen spring from where they are to their new target. On backward nav that
+  // means the previous object grows from its lower-left spot to the centre, and the current object
+  // slides out to the right until it is off-screen, where it is removed.
+  // Frozen at mount: react-spring snaps any key whose `from` value changes on a later render, so a
+  // `from` derived from the current props would make y/scale jump on the next navigation.
+  const [from] = useState(() =>
+    enterFrom === 'right'
+      ? { animatedScale: 1.5, animatedPositionX: SPAWN_RIGHT_X, animatedPositionY: 0 }
+      : { animatedScale: scale, animatedPositionX: OFFSCREEN_LEFT_X, animatedPositionY: positionY }
+  );
   const { animatedScale, animatedPositionX, animatedPositionY } = useSpring({
-    from: {
-      animatedScale: entryFromRight ? 1.5 : scale,
-      animatedPositionX: entryFromRight ? 5 : positionX,
-      animatedPositionY: entryFromRight ? 0 : positionY,
-    },
+    from,
     to: {
       animatedScale: scale,
       animatedPositionX: positionX,
       animatedPositionY: positionY,
     },
     config: { tension: 80, friction: 26 },
+    // A leaving object is removed once it has come to rest off-screen
+    onRest: exitToken !== undefined
+      ? (result) => {
+          if (result.finished) useCosmicStore.getState().removeExited(exitToken);
+        }
+      : undefined,
   });
 
   // Load texture for spheres - check cache first for instant display
