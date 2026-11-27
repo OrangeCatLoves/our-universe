@@ -6,11 +6,14 @@ import { StarPathNav } from './StarPathNav';
 import { BackToMenu } from '../BackToMenu';
 import { useExoplanetStore } from '../../store/useExoplanetStore';
 import { exoplanets } from '../../data/extremeExoplanets';
+import { useAmbient, useNavigationSound } from '../../audio/useSound';
 
 function ExoplanetsTheme() {
   const { planetId } = useParams<{ planetId?: string }>();
   const navigate = useNavigate();
   const { currentIndex, jumpTo } = useExoplanetStore();
+  useAmbient('exoplanets');
+  useNavigationSound(currentIndex);
 
   // Handle deep linking - navigate to planet if planetId is in URL
   // Only runs when planetId changes (user navigates directly via URL)

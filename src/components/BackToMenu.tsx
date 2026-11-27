@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
+import { sound } from '../audio/soundEngine';
 import './BackToMenu.css';
 
 export function BackToMenu() {
   const navigate = useNavigate();
 
   const handleClick = () => {
+    sound.tick();
     navigate('/');
   };
 

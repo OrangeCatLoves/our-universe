@@ -22,6 +22,12 @@ export const themes: ThemeInfo[] = [
     tagline: 'Worlds of glass rain, iron storms, and impossible heat',
     route: '/extreme-exoplanets',
   },
+  {
+    id: 'black-holes',
+    name: 'Black Holes',
+    tagline: 'Where gravity bends light itself',
+    route: '/black-holes',
+  },
 ];
 
 interface AppStore {

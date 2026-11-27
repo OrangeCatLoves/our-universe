@@ -6,11 +6,14 @@ import { Navigation } from './Navigation';
 import { BackToMenu } from '../BackToMenu';
 import { useCosmicStore } from '../../store/useCosmicStore';
 import { celestialObjects } from '../../data/cosmicScale';
+import { useAmbient, useNavigationSound } from '../../audio/useSound';
 
 function CosmicScaleTheme() {
   const { objectId } = useParams<{ objectId?: string }>();
   const navigate = useNavigate();
   const { currentIndex, jumpTo, setTransitioning, initializeFromIndex, visibleObjects } = useCosmicStore();
+  useAmbient('cosmic', currentIndex / Math.max(celestialObjects.length - 1, 1));
+  useNavigationSound(currentIndex);
 
   // Ensure store is properly initialized on mount
   useEffect(() => {

@@ -1,11 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import { themes } from '../store/useAppStore';
+import { sound } from '../audio/soundEngine';
+import { useAmbient } from '../audio/useSound';
 import './MainMenu.css';
 
 function MainMenu() {
   const navigate = useNavigate();
+  useAmbient('menu');
 
   const handleThemeSelect = (route: string) => {
+    sound.tick();
+    sound.chime();
     navigate(route);
   };
 
@@ -32,6 +37,7 @@ function MainMenu() {
               key={theme.id}
               className="theme-portal"
               onClick={() => handleThemeSelect(theme.route)}
+              onMouseEnter={() => sound.hover()}
             >
               <div className="portal-glow" />
               <div className="portal-content">

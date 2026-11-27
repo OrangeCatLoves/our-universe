@@ -1,0 +1,46 @@
+/* Sits just left of the Menu button (BackToMenu: fixed top-right, ~100px wide on desktop) */
+.sound-toggle {
+  position: fixed;
+  top: 20px;
+  right: 138px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.sound-toggle--menu {
+  right: 20px;
+}
+
+.sound-toggle:hover {
+  color: white;
+  border-color: rgba(77, 201, 255, 0.8);
+  box-shadow:
+    0 0 15px rgba(77, 201, 255, 0.4),
+    0 0 30px rgba(77, 201, 255, 0.2),
+    inset 0 0 15px rgba(77, 201, 255, 0.05);
+}
+
+.sound-toggle.is-muted {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+@media (max-width: 768px) {
+  .sound-toggle {
+    right: 76px;
+    width: 38px;
+    height: 38px;
+  }
+  .sound-toggle--menu {
+    right: 20px;
+  }
+}
