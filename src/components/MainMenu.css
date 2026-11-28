@@ -57,7 +57,7 @@
 
 .theme-portals {
   display: flex;
-  gap: 40px;
+  gap: 26px;
   justify-content: center;
   flex-wrap: wrap;
   margin-bottom: 40px;
@@ -65,8 +65,8 @@
 
 .theme-portal {
   position: relative;
-  width: 320px;
-  padding: 40px 30px;
+  width: 290px;
+  padding: 40px 26px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;

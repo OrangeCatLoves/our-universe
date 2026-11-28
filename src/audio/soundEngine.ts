@@ -11,7 +11,7 @@
  * pointer/key/touch event; anything requested before that is remembered and starts then.
  */
 
-export type AmbientId = 'menu' | 'cosmic' | 'exoplanets' | 'blackholes';
+export type AmbientId = 'menu' | 'cosmic' | 'exoplanets' | 'blackholes' | 'skies';
 export interface AmbientParams {
   depth?: number; // 0 = lightest, 1 = deepest
 }
@@ -36,6 +36,7 @@ interface ThemeSpec {
   noise: { freq: number; q: number; level: number };
   shimmer: { notes: number[]; everyMs: [number, number]; level: number } | null;
   pulseHz: number;       // slow amplitude breathing (0 = none)
+  windFromDepth?: boolean; // depth controls how much wind you hear (Skies of Other Worlds)
 }
 
 const THEMES: Record<AmbientId, ThemeSpec> = {
@@ -65,6 +66,16 @@ const THEMES: Record<AmbientId, ThemeSpec> = {
     noise: { freq: 900, q: 0.7, level: 0.05 },
     shimmer: { notes: [698.5, 830.6, 932.3, 1046.5, 1244.5], everyMs: [5000, 11000], level: 0.026 },
     pulseHz: 0,
+  },
+  skies: {
+    rootHigh: 49, rootLow: 49,
+    ratios: [1, 1.5, 2, 3],
+    waves: ['sine', 'triangle', 'sine', 'sine'],
+    cutoffHigh: 620, cutoffLow: 620, level: 0.2,
+    noise: { freq: 420, q: 0.35, level: 0.09 },
+    shimmer: { notes: [659.3, 784, 987.8, 1174.7], everyMs: [6000, 13000], level: 0.022 },
+    pulseHz: 0,
+    windFromDepth: true,
   },
   blackholes: {
     rootHigh: 41.2, rootLow: 27.5,
@@ -424,7 +435,9 @@ class SoundEngine {
       }
     });
 
-    // breathy noise bed
+    // breathy noise bed (wind)
+    let noiseGain: GainNode | null = null;
+    let windGain: GainNode | null = null;
     if (this.noiseBuffer) {
       const n = ctx.createBufferSource();
       n.buffer = this.noiseBuffer;
@@ -434,11 +447,13 @@ class SoundEngine {
       bp.frequency.value = spec.noise.freq;
       bp.Q.value = spec.noise.q;
       const ng = ctx.createGain();
-      ng.gain.value = spec.noise.level;
+      ng.gain.value = spec.windFromDepth ? spec.noise.level * (0.05 + 1.8 * depth) : spec.noise.level;
+      noiseGain = ng;
       const wind = ctx.createOscillator();
       wind.frequency.value = rand(0.04, 0.09);
       const windAmt = ctx.createGain();
       windAmt.gain.value = spec.noise.level * 0.6;
+      windGain = windAmt;
       wind.connect(windAmt).connect(ng.gain);
       n.connect(bp).connect(ng).connect(out);
       n.start(0, rand(0, 3));
@@ -484,6 +499,10 @@ class SoundEngine {
         oscs.forEach(({ osc, ratio }) => osc.frequency.setTargetAtTime(root(d) * ratio, now, 1.2));
         lp.frequency.setTargetAtTime(cutoff(d), now, 1.2);
         lfoAmt.gain.setTargetAtTime(cutoff(d) * 0.35, now, 1.2);
+        if (spec.windFromDepth && noiseGain && windGain) {
+          noiseGain.gain.setTargetAtTime(spec.noise.level * (0.05 + 1.8 * d), now, 1.5);
+          windGain.gain.setTargetAtTime(spec.noise.level * (0.05 + 1.2 * d), now, 1.5);
+        }
       },
       stop: () => {
         const now = ctx.currentTime;

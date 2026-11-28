@@ -10,6 +10,7 @@ const MainMenu = lazy(() => import('./components/MainMenu'));
 const CosmicScaleTheme = lazy(() => import('./components/cosmic-scale/CosmicScaleTheme'));
 const ExoplanetsTheme = lazy(() => import('./components/exoplanets/ExoplanetsTheme'));
 const BlackHolesTheme = lazy(() => import('./components/black-holes/BlackHolesTheme'));
+const OtherWorldsTheme = lazy(() => import('./components/other-worlds/OtherWorldsTheme'));
 
 // Loading fallback
 function LoadingScreen() {
@@ -39,6 +40,8 @@ function App() {
           <Route path="/extreme-exoplanets/:planetId" element={<ExoplanetsTheme />} />
           <Route path="/black-holes" element={<BlackHolesTheme />} />
           <Route path="/black-holes/:holeId" element={<BlackHolesTheme />} />
+          <Route path="/other-worlds" element={<OtherWorldsTheme />} />
+          <Route path="/other-worlds/:worldId" element={<OtherWorldsTheme />} />
         </Routes>
       </Suspense>
       <SoundToggle onMenu={pathname === '/'} />

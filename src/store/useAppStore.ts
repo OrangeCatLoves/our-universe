@@ -28,6 +28,12 @@ export const themes: ThemeInfo[] = [
     tagline: 'Where gravity bends light itself',
     route: '/black-holes',
   },
+  {
+    id: 'other-worlds',
+    name: 'Skies of Other Worlds',
+    tagline: 'Stand on another world and look up',
+    route: '/other-worlds',
+  },
 ];
 
 interface AppStore {

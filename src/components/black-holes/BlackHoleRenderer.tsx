@@ -13,6 +13,7 @@ import { lensingVertex, lensingFragment } from './lensingShader';
 import { getNoiseTexture } from './noiseTexture';
 import { GradeEffect } from './gradeEffect';
 import { sound } from '../../audio/soundEngine';
+import { SceneErrorBoundary } from '../SceneErrorBoundary';
 
 // ------------------------------------------------------------------ quality
 interface Tier { dpr: number; steps: number; samples: number; octaves: number }
@@ -571,7 +572,8 @@ export function BlackHoleRenderer({ index, framing = 'panel' }: { index: number;
   const adaptive = FORCED_TIER === null && !FROZEN;
 
   return (
-    <div style={{ width: '100%', height: '100%', background: '#000' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', background: '#000' }}>
+      <SceneErrorBoundary>
       <Canvas
         dpr={TIERS[tierIndex].dpr}
         camera={{ position: [0, 4, 26], fov: 50, near: 0.1, far: 1000 }}
@@ -602,6 +604,7 @@ export function BlackHoleRenderer({ index, framing = 'panel' }: { index: number;
           <primitive object={grade} />
         </EffectComposer>
       </Canvas>
+      </SceneErrorBoundary>
       {import.meta.env.DEV && (
         <div ref={stats} style={{ position: 'fixed', right: 12, bottom: 8, zIndex: 50, font: '11px monospace', color: 'rgba(255,255,255,0.45)', pointerEvents: 'none' }} />
       )}

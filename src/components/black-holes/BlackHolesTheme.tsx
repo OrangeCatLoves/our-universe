@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BlackHoleRenderer } from './BlackHoleRenderer';
 import { BlackHoleInfoPanel } from './BlackHoleInfoPanel';
@@ -18,6 +18,10 @@ function BlackHolesTheme() {
   const { holeId } = useParams<{ holeId?: string }>();
   const navigate = useNavigate();
   const { currentIndex, jumpTo } = useBlackHoleStore();
+  const urlIndex = blackHoles.findIndex((b) => b.id === holeId);
+  // On load the link wins (see Skies of Other Worlds): wait for it before syncing the URL or rendering
+  const settled = useRef(false);
+  if (!settled.current && (urlIndex === -1 || urlIndex === currentIndex)) settled.current = true;
 
   useAmbient('blackholes', depthFor(blackHoles[currentIndex].massSolar));
   // whoosh on every move (the merger's chirp is timed by the scene, at each merger)
@@ -34,10 +38,11 @@ function BlackHolesTheme() {
 
   // Keep the URL in sync for shareable links
   useEffect(() => {
+    if (!settled.current) return;
     const bh = blackHoles[currentIndex];
     if (bh) {
       const path = `/black-holes/${bh.id}`;
-      if (window.location.pathname !== path) navigate(path, { replace: true });
+      if (window.location.pathname !== path) navigate(path + window.location.search, { replace: true });
     }
   }, [currentIndex, navigate]);
 
@@ -51,7 +56,7 @@ function BlackHolesTheme() {
 
   return (
     <div className="theme black-holes">
-      <BlackHoleRenderer index={currentIndex} />
+      {settled.current && <BlackHoleRenderer index={currentIndex} />}
       <BlackHoleInfoPanel />
       <BlackHoleNav />
       <BackToMenu />

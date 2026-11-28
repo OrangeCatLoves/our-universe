@@ -1,0 +1,207 @@
+.other-worlds .world-fade {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+  z-index: 2;
+}
+
+/* names floating in the sky (drei <Html>) */
+.sky-label {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82);
+  white-space: nowrap;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.9);
+  transform: translateY(26px);
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.sky-label::before {
+  content: '';
+  display: block;
+  width: 1px;
+  height: 14px;
+  margin: -18px auto 4px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.sky-label--sun {
+  color: rgba(255, 236, 200, 0.9);
+}
+
+/* info panel extras */
+.world-kicker {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 2px;
+}
+
+.look-at {
+  margin: 10px 0 14px;
+}
+
+.look-at-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(77, 201, 255, 0.85);
+  margin-bottom: 6px;
+}
+
+.look-at-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.look-at-chip {
+  font: inherit;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(77, 201, 255, 0.08);
+  border: 1px solid rgba(77, 201, 255, 0.35);
+  border-radius: 14px;
+  padding: 4px 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.look-at-chip:hover {
+  background: rgba(77, 201, 255, 0.22);
+  border-color: rgba(77, 201, 255, 0.8);
+  color: #fff;
+}
+
+/* time-lapse control */
+.time-control {
+  position: fixed;
+  right: 20px;
+  bottom: 26px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.time-play {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.time-play:hover {
+  border-color: rgba(77, 201, 255, 0.8);
+  box-shadow: 0 0 12px rgba(77, 201, 255, 0.4);
+}
+
+.time-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 190px;
+}
+
+.time-label {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255, 220, 170, 0.9);
+  min-height: 15px;
+}
+
+.time-slider {
+  width: 100%;
+  accent-color: #4dc9ff;
+  cursor: pointer;
+}
+
+.time-labels {
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.55);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.time-labels.on {
+  color: #fff;
+  border-color: rgba(77, 201, 255, 0.6);
+}
+
+@media (max-width: 900px) {
+  .time-control {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: 150px;
+    padding: 8px 12px;
+  }
+
+  .time-body {
+    width: 150px;
+  }
+}
+
+/* collapsible info panel */
+.world-info-panel {
+  transition: max-width 0.35s ease, padding 0.35s ease;
+}
+
+.world-info-panel .panel-toggle {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.world-info-panel .panel-toggle:hover {
+  color: #fff;
+  border-color: rgba(77, 201, 255, 0.8);
+  box-shadow: 0 0 12px rgba(77, 201, 255, 0.35);
+}
+
+.world-info-panel.is-collapsed {
+  max-width: 230px;
+  padding: 14px 54px 14px 18px;
+}
+
+.world-info-panel.is-collapsed .planet-name {
+  font-size: 22px;
+  margin: 0;
+}
