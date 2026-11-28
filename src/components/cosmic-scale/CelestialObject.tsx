@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useSpring, animated } from '@react-spring/three';
-import { Billboard } from '@react-three/drei';
+import { Billboard, Html } from '@react-three/drei';
 import type { CelestialObject as CelestialObjectType } from '../../data/cosmicScale';
 import * as THREE from 'three';
 import { getCachedTexture, loadTexture } from '../../utils/textureCache';
@@ -79,7 +79,9 @@ interface Props {
   positionY: number;
   isCurrent: boolean;
   enterFrom: EntryDirection;
+  zoomFrom?: number;  // starting scale of a 'zoom' entrance (giant jump forward)
   exitToken?: number; // set while this object is sliding out off the right edge (backward navigation)
+  caption?: string;   // label under an earlier object, e.g. "Earth - to scale"
 }
 
 // Helper to check if object is a star (should be self-luminous)
@@ -184,8 +186,9 @@ function SaturnRings() {
   );
 }
 
-export function CelestialObject({ object, scale, positionX, positionY, enterFrom, exitToken }: Props) {
+export function CelestialObject({ object, scale, positionX, positionY, isCurrent, enterFrom, zoomFrom, exitToken, caption }: Props) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const { camera } = useThree();
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [_textureLoaded, setTextureLoaded] = useState(false);
 
@@ -198,11 +201,17 @@ export function CelestialObject({ object, scale, positionX, positionY, enterFrom
   // slides out to the right until it is off-screen, where it is removed.
   // Frozen at mount: react-spring snaps any key whose `from` value changes on a later render, so a
   // `from` derived from the current props would make y/scale jump on the next navigation.
-  const [from] = useState(() =>
-    enterFrom === 'right'
+  //  - 'zoom':  a giant jump forward, the new object starts filling the view at its final spot and
+  //             shrinks into place (kept smaller than the camera distance so a sphere never swallows it)
+  const [from] = useState(() => {
+    if (enterFrom === 'zoom') {
+      const toCamera = camera.position.distanceTo(new THREE.Vector3(positionX, positionY, 0));
+      return { animatedScale: Math.min(zoomFrom ?? 4, toCamera - 1.2), animatedPositionX: positionX, animatedPositionY: positionY };
+    }
+    return enterFrom === 'right'
       ? { animatedScale: 1.5, animatedPositionX: SPAWN_RIGHT_X, animatedPositionY: 0 }
-      : { animatedScale: scale, animatedPositionX: OFFSCREEN_LEFT_X, animatedPositionY: positionY }
-  );
+      : { animatedScale: scale, animatedPositionX: OFFSCREEN_LEFT_X, animatedPositionY: positionY };
+  });
   const { animatedScale, animatedPositionX, animatedPositionY } = useSpring({
     from,
     to: {
@@ -298,7 +307,12 @@ export function CelestialObject({ object, scale, positionX, positionY, enterFrom
           {isSaturn(object.id) && <SaturnRings />}
         </>
       ) : (
-        <StaticImage object={object} />
+        <StaticImage object={object} isCurrent={isCurrent} />
+      )}
+      {caption && !isCurrent && exitToken === undefined && (
+        <Html position={[0, object.category === 'sphere' ? -1.25 : -1.15, 0]} center zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}>
+          <div className="scale-caption">{caption}</div>
+        </Html>
       )}
     </animated.group>
   );
@@ -307,7 +321,7 @@ export function CelestialObject({ object, scale, positionX, positionY, enterFrom
 // Static image component for nebulae, galaxies, black holes, etc.
 // Uses Billboard to always face camera and custom shader for dark pixel transparency
 // Black holes use a special shader that preserves the dark center (event horizon)
-function StaticImage({ object }: { object: CelestialObjectType }) {
+function StaticImage({ object, isCurrent }: { object: CelestialObjectType; isCurrent: boolean }) {
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [aspectRatio, setAspectRatio] = useState<number>(1);
   const objectIsBlackHole = isBlackHole(object.type);
@@ -377,7 +391,8 @@ function StaticImage({ object }: { object: CelestialObjectType }) {
 
     return (
       <Billboard follow={true} lockX={false} lockY={false} lockZ={false}>
-        <mesh>
+        {/* earlier objects draw on top, so a giant newcomer never hides the one it is compared to */}
+        <mesh renderOrder={isCurrent ? 0 : 1}>
           <planeGeometry args={[width, height]} />
           <shaderMaterial
             vertexShader={transparentDarkVertexShader}

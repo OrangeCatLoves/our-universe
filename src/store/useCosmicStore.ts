@@ -5,7 +5,17 @@ import { celestialObjects } from '../data/cosmicScale';
 // Where a newly mounted object starts its spring (only read when its component mounts):
 //  'right' - forward navigation: the new current object slides in from the spawn point on the right
 //  'left'  - backward navigation: the object slides in from off the left edge of the screen
-export type EntryDirection = 'right' | 'left';
+//  'zoom'  - a giant jump forward (10x bigger or more): the new object starts filling the screen and
+//            shrinks into place while the previous one falls away, like the camera pulling back
+export type EntryDirection = 'right' | 'left' | 'zoom';
+
+// Forward moves to something at least this many times bigger use the 'zoom' entrance
+export const ZOOM_RATIO = 10;
+
+/** How big a 'zoom' entrance starts (grows with the size of the jump, capped to stay on screen). */
+export function zoomStartScale(ratio: number): number {
+  return Math.min(1.5 * (1 + Math.log10(ratio) * 1.6), 6.5);
+}
 
 // Layout positions shared with CelestialObject
 export const SPAWN_RIGHT_X = 5;        // where next() spawns the new current object
@@ -22,6 +32,7 @@ export interface VisibleObject {
   positionX: number;
   positionY: number;
   enterFrom: EntryDirection;
+  zoomFrom?: number;   // starting scale of a 'zoom' entrance
   mountId?: number;    // identity of this on-screen instance (render key); new instance = new id
   exiting?: boolean;   // sliding out off the right edge (backward navigation); removed when it stops
   exitToken?: number;  // identifies which transition removes this object
@@ -42,7 +53,7 @@ interface CosmicStore {
   removeExited: (token: number) => void;
 }
 
-const MINIMUM_VISIBLE_SCALE = 0.02; // 2% minimum scale to keep objects visible
+export const MINIMUM_VISIBLE_SCALE = 0.02; // 2% minimum scale to keep objects visible
 const MAX_VISIBLE_OBJECTS = 2; // Keep only 2 recent objects (current + 1 previous)
 
 const CURRENT_OBJECT_SCALE = 1.5; // Scale for the current/main object (1.5 = 50% bigger)
@@ -106,6 +117,21 @@ function backwardLayout(objects: VisibleObject[], currentIndex: number, targetIn
   return [...targets, ...leaving];
 }
 
+/**
+ * Where the previous object rests: right beside the current one, standing on the same baseline, like
+ * a size-comparison chart (so the two can be compared at a glance, truly to scale).
+ */
+function previousSlot(index: number, scale: number): { x: number; y: number } {
+  const o = celestialObjects[index];
+  const isImage = o.category !== 'sphere';
+  const halfWidth = isImage ? scale * (o.type.toLowerCase().includes('black hole') ? 4.5 : 1.75) : scale * (o.id === 'saturn' ? 2.2 : 1);
+  const halfHeight = isImage ? halfWidth * 0.55 : scale;
+  return {
+    x: 1.5 - CURRENT_OBJECT_SCALE - 0.35 - halfWidth,
+    y: -CURRENT_OBJECT_SCALE + halfHeight,
+  };
+}
+
 // Helper to build visible objects for a given index
 function buildVisibleObjects(index: number): VisibleObject[] {
   const startIndex = Math.max(0, index - (MAX_VISIBLE_OBJECTS - 1));
@@ -114,14 +140,21 @@ function buildVisibleObjects(index: number): VisibleObject[] {
   for (let i = startIndex; i <= index; i++) {
     const obj = celestialObjects[i];
     const distanceFromCurrent = index - i;
-    const cumulativeScale = distanceFromCurrent === 0 ? CURRENT_OBJECT_SCALE : calculateCumulativeScale(i, index);
+    // true to scale: earlier objects are drawn at their real size relative to the current one
+    const cumulativeScale = CURRENT_OBJECT_SCALE * (distanceFromCurrent === 0 ? 1 : calculateCumulativeScale(i, index));
 
+    const scale = Math.max(cumulativeScale, MINIMUM_VISIBLE_SCALE);
+    const slot = distanceFromCurrent === 0
+      ? { x: 1.5, y: 0 }
+      : distanceFromCurrent === 1
+        ? previousSlot(i, scale)
+        : { x: -3 - distanceFromCurrent * 1.5, y: -1.5 - distanceFromCurrent * 0.8 };
     newObjects.push({
       id: obj.id,
       index: i,
-      scale: Math.max(cumulativeScale, MINIMUM_VISIBLE_SCALE),
-      positionX: distanceFromCurrent === 0 ? 1.5 : -3 - (distanceFromCurrent * 1.5),
-      positionY: distanceFromCurrent === 0 ? 0 : -1.5 - (distanceFromCurrent * 0.8),
+      scale,
+      positionX: slot.x,
+      positionY: slot.y,
       enterFrom: 'right',
     });
   }
@@ -209,21 +242,25 @@ export const useCosmicStore = create<CosmicStore>()(
 
     // Update all existing objects: shift left-down and scale down
     const updatedObjects = visibleObjects.map((obj) => {
-      // If this was the current object, calculate scale from base 1 (not CURRENT_OBJECT_SCALE)
-      // This ensures the 50% size boost only applies to the object currently in view
-      const baseScale = obj.index === currentIndex ? 1 : obj.scale;
+      // True to scale: the previous objects keep their real size relative to the new current one
+      const baseScale = obj.index === currentIndex ? CURRENT_OBJECT_SCALE : obj.scale;
       const newScale = Math.max(baseScale * sizeRatio, MINIMUM_VISIBLE_SCALE);
       const distanceFromCurrent = (visibleObjects.length - visibleObjects.indexOf(obj));
+      const slot = distanceFromCurrent === 1
+        ? previousSlot(obj.index, newScale)
+        : { x: -3 - distanceFromCurrent * 1.5, y: -1.5 - distanceFromCurrent * 0.8 };
 
       return {
         ...obj,
-        positionX: -3 - (distanceFromCurrent * 1.5),
-        positionY: -1.5 - (distanceFromCurrent * 0.8),
+        positionX: slot.x,
+        positionY: slot.y,
         scale: newScale,
       };
     });
 
-    // Add the new object - enters from RIGHT (forward navigation)
+    // Add the new object - enters from RIGHT (forward navigation), or zooms in for a giant jump
+    const growth = nextObject.sizeKm / currentObject.sizeKm;
+    const zoom = growth >= ZOOM_RATIO;
     const newVisibleObjects = [
       ...updatedObjects,
       {
@@ -232,7 +269,8 @@ export const useCosmicStore = create<CosmicStore>()(
         scale: CURRENT_OBJECT_SCALE,
         positionX: 1.5,
         positionY: 0,
-        enterFrom: 'right' as EntryDirection,
+        enterFrom: (zoom ? 'zoom' : 'right') as EntryDirection,
+        zoomFrom: zoom ? zoomStartScale(growth) : undefined,
         mountId: ++mountCounter, // fresh instance, even if a copy with this id is still sliding out
       }
     ];
@@ -275,11 +313,15 @@ export const useCosmicStore = create<CosmicStore>()(
     // screen keep their mounted component and animate to their new slot
     transitionToken++;
     const live = liveObjects(visibleObjects);
-    const newObjects = buildVisibleObjects(index).map((t) => {
+    const growth = celestialObjects[index].sizeKm / celestialObjects[currentIndex].sizeKm;
+    const newObjects = buildVisibleObjects(index).map((t): VisibleObject => {
       const existing = live.find((o) => o.id === t.id);
-      return existing
-        ? { ...t, enterFrom: existing.enterFrom, mountId: existing.mountId }
-        : { ...t, mountId: ++mountCounter };
+      if (existing) return { ...t, enterFrom: existing.enterFrom, mountId: existing.mountId };
+      // the jump target zooms in when it is a giant leap in size
+      if (t.index === index && growth >= ZOOM_RATIO) {
+        return { ...t, enterFrom: 'zoom', zoomFrom: zoomStartScale(growth), mountId: ++mountCounter };
+      }
+      return { ...t, mountId: ++mountCounter };
     });
 
     set({ isTransitioning: true, currentIndex: index, visibleObjects: newObjects });

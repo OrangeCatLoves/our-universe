@@ -1,6 +1,6 @@
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { useCosmicStore } from '../../store/useCosmicStore';
+import { useCosmicStore, MINIMUM_VISIBLE_SCALE } from '../../store/useCosmicStore';
 import { celestialObjects } from '../../data/cosmicScale';
 import { CelestialObject } from './CelestialObject';
 import { Suspense, useEffect, useState, useRef } from 'react';
@@ -155,6 +155,16 @@ export function Scene() {
         <Suspense fallback={null}>
           {visibleObjects.map((visibleObj) => {
             const object = celestialObjects[visibleObj.index];
+            const current = celestialObjects[currentIndex];
+            // Earlier objects are labelled; spheres next to a sphere are drawn truly to scale
+            const tooSmall = visibleObj.scale <= MINIMUM_VISIBLE_SCALE + 1e-6;
+            const caption = visibleObj.index === currentIndex
+              ? undefined
+              : tooSmall
+                ? `${object.name} \u00b7 too small to see at this scale`
+                : object.category === 'sphere' && current.category === 'sphere'
+                  ? `${object.name} \u00b7 to scale`
+                  : object.name;
             return (
               <CelestialObject
                 key={`${visibleObj.id}#${visibleObj.mountId}`}
@@ -164,7 +174,9 @@ export function Scene() {
                 positionY={visibleObj.positionY}
                 isCurrent={visibleObj.index === currentIndex}
                 enterFrom={visibleObj.enterFrom}
+                zoomFrom={visibleObj.zoomFrom}
                 exitToken={visibleObj.exiting ? visibleObj.exitToken : undefined}
+                caption={caption}
               />
             );
           })}

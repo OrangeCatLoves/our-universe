@@ -1,6 +1,16 @@
 import { useCosmicStore } from '../../store/useCosmicStore';
 import { celestialObjects } from '../../data/cosmicScale';
+import { comparisonsFor } from '../../utils/scaleComparisons';
 import './InfoPanel.css';
+
+/** Renders **bold** segments of a comparison line. */
+function Emphasised({ text }: { text: string }) {
+  return (
+    <>
+      {text.split('**').map((part, i) => (i % 2 === 1 ? <strong key={i}>{part}</strong> : <span key={i}>{part}</span>))}
+    </>
+  );
+}
 
 // Format size with smart unit switching
 function formatSize(sizeKm: number): string {
@@ -43,6 +53,16 @@ export function InfoPanel() {
       <div className="object-type">{object.type}</div>
       <div className="object-size">
         <strong>Size:</strong> {formatSize(object.sizeKm)}
+      </div>
+
+      <div className="scale-card" key={object.id}>
+        <div className="scale-card-title">How big is it?</div>
+        {comparisonsFor(currentIndex).map((c, i) => (
+          <div className="scale-line" key={i} style={{ animationDelay: `${0.15 + i * 0.12}s` }}>
+            <span className="scale-icon" aria-hidden="true">{c.icon}</span>
+            <span className="scale-text"><Emphasised text={c.text} /></span>
+          </div>
+        ))}
       </div>
 
       {object.discoveryDate && object.discoveredBy && (

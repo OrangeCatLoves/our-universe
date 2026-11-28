@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Scene } from './Scene';
 import { InfoPanel } from './InfoPanel';
 import { Navigation } from './Navigation';
+import { ScaleLadder } from './ScaleLadder';
 import { BackToMenu } from '../BackToMenu';
 import { useCosmicStore } from '../../store/useCosmicStore';
 import { celestialObjects } from '../../data/cosmicScale';
@@ -68,6 +69,7 @@ function CosmicScaleTheme() {
       <Scene />
       <InfoPanel />
       <Navigation />
+      <ScaleLadder />
       <BackToMenu />
     </div>
   );

@@ -1,0 +1,157 @@
+.scale-ladder {
+  position: fixed;
+  top: 92px;
+  bottom: 168px;
+  right: 18px;
+  width: 230px;
+  z-index: 9;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ladder-title,
+.ladder-foot {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: right;
+  padding-right: 4px;
+}
+
+.ladder-title {
+  margin-bottom: 10px;
+}
+
+.ladder-foot {
+  margin-top: 10px;
+  letter-spacing: 1px;
+  text-transform: none;
+}
+
+.ladder-track {
+  position: relative;
+  flex: 1;
+}
+
+/* the ruler itself sits 96px from the right edge; landmarks to its right, the marker to its left */
+.ladder-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 96px;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(150, 120, 255, 0.5), rgba(77, 201, 255, 0.5), rgba(255, 255, 255, 0.25));
+}
+
+/* glowing part of the ruler from the bottom up to the current object */
+.ladder-progress {
+  position: absolute;
+  bottom: 0;
+  right: 95px;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to top, rgba(77, 201, 255, 0.15), rgba(77, 201, 255, 0.85));
+  box-shadow: 0 0 8px rgba(77, 201, 255, 0.5);
+  transition: top 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ladder-tick {
+  position: absolute;
+  right: 93px;
+  width: 7px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.ladder-landmark {
+  position: absolute;
+  right: 0;
+  width: 88px;
+  transform: translateY(-50%);
+  font-size: 10px;
+  line-height: 1.1;
+  color: rgba(255, 255, 255, 0.42);
+  white-space: nowrap;
+}
+
+.ladder-landmark::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  width: 6px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.ladder-dot {
+  position: absolute;
+  right: 94px;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px -1.5px 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.4s ease, transform 0.2s ease;
+}
+
+.ladder-dot.seen {
+  background: rgba(77, 201, 255, 0.75);
+}
+
+.ladder-dot:hover {
+  transform: scale(1.8);
+  background: #fff;
+}
+
+.ladder-marker {
+  position: absolute;
+  right: 104px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  transition: top 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ladder-marker::after {
+  /* the "you are here" dot on the ruler */
+  content: '';
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  margin-top: -5.5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(77, 201, 255, 0.35), 0 0 14px rgba(77, 201, 255, 0.9);
+}
+
+.ladder-marker-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+}
+
+.ladder-marker-size {
+  font-size: 11px;
+  color: rgba(77, 201, 255, 0.9);
+  white-space: nowrap;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+}
+
+@media (max-width: 1000px), (max-height: 560px) {
+  .scale-ladder {
+    display: none;
+  }
+}
